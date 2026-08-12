@@ -39,4 +39,3 @@ describe("redact storage", () => {
     expect(readState(localStorage)).toEqual(seedState());
   });
 });
-

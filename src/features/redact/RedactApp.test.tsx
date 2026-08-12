@@ -67,4 +67,3 @@ describe("Redact application", () => {
     );
   });
 });
-

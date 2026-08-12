@@ -41,4 +41,3 @@ export function resetState(
   writeState(storage, state);
   return state;
 }
-

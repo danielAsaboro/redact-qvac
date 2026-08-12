@@ -220,4 +220,3 @@ export function recordExport(state: RedactState, at: string): RedactState {
     ],
   };
 }
-
