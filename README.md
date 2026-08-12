@@ -1,6 +1,6 @@
 # Redact
 
-> **Status:** Non-AI starter foundation. The QVAC capabilities below are planned course work, not features currently present in the app.
+> **Status:** Implemented non-AI UI starter. Redaction is visual and export is simulated; QVAC capabilities remain planned course work.
 
 ## 1. Product thesis
 
@@ -20,7 +20,7 @@ It has a durable collection, repeat visits, editing, inspection, state transitio
 
 ## 5. Non-AI starter experience
 
-Browse an intake tray, open a public-safe fixture, draw and edit marks, compare original and safe-share views, inspect the audit trail, and record a simulated export.
+Browse three deterministic fixture dossiers, place and reposition marks, compare original and safe-share views, inspect a local audit strip, record a simulated export, and reset the entire workspace. State persists in browser storage.
 
 ## 6. Detailed use cases
 
@@ -28,7 +28,7 @@ Manual region marking; reversible editing; original-versus-preview inspection; r
 
 ## 7. Bespoke metaphor and interaction model
 
-A classified dossier on a light table. Marks feel like deliberate black-marker decisions, and trust outranks spectacle.
+A classified dossier on a light table. Marks feel like deliberate black-marker decisions, and trust outranks spectacle. Desktop uses a three-bay intake, light-table, and review layout; narrow screens unfold it as a sequential case file.
 
 ## 8. Planned QVAC transformation
 
@@ -62,7 +62,7 @@ The starter is a browser UI over fixture media. Export is simulated. Secure PDF 
 
 ## 15. Safety, privacy, and failure modes
 
-Automatic detection can miss identifiers or remove useful context. The interface must always state that a visual overlay alone is not secure source-file sanitation.
+Automatic detection can miss identifiers or remove useful context. The interface always states that its visual overlay does not securely rewrite a source file or remove hidden metadata.
 
 ## 16. Course-fit score
 
@@ -76,7 +76,8 @@ npm run dev
 npm run lint
 npm run typecheck
 npm test
+npm run test:e2e
 npm run build
 ```
 
-The complete starter will expose a visible **Reset demo data** action. Until its product wave is implemented, this directory contains the independently verified Next.js and test foundation.
+Use the visible **Reset demo data** action to restore the three fixture dossiers. The browser tests expect the local app at `http://localhost:3101`.
