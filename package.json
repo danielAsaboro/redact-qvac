@@ -17,7 +17,9 @@
     "redact:test-files": "node qvac-service/prepare-test-files.mjs",
     "qvac:ocr-smoke": "node qvac-service/ocr-smoke.mjs",
     "qvac:service": "tsx qvac-service/index.ts",
-    "qvac:evaluate": "tsx qvac-service/evaluation-cli.ts"
+    "qvac:evaluate": "tsx qvac-service/evaluation-cli.ts",
+    "qvac:offline": "sandbox-exec -p '(version 1) (allow default) (deny network-outbound (require-all (require-any (remote tcp \"*:*\") (remote udp \"*:*\")) (require-not (remote ip \"localhost:*\"))))' node_modules/.bin/tsx qvac-service/offline-cli.ts",
+    "qvac:service:offline": "sandbox-exec -p '(version 1) (allow default) (deny network-outbound (require-all (require-any (remote tcp \"*:*\") (remote udp \"*:*\")) (require-not (remote ip \"localhost:*\"))))' node_modules/.bin/tsx qvac-service/index.ts"
   },
   "dependencies": {
     "@qvac/sdk": "0.17.1",

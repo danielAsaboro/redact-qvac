@@ -50,6 +50,19 @@ After both cached models have been warmed, run the labelled local evaluation:
 npm run qvac:evaluate
 ```
 
+On macOS, prove cached OCR and reasoning while a process sandbox denies remote
+TCP/UDP (localhost and QVAC worker IPC remain available):
+
+```bash
+npm run qvac:offline
+```
+
+For the browser receipt, run `npm run qvac:service:offline`, serve the production
+build, and opt into `e2e/offline-qvac-workflow.spec.ts` with
+`REDACT_LIVE_QVAC=1`. That test rejects non-local browser requests, reviews real
+suggestions, inspects a black pixel in the downloaded copy, and verifies the
+controlled source file's SHA-256 did not change.
+
 ## Security boundary
 
 The generated copy is a new raster image or raster-page PDF, so source PDF text
