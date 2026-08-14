@@ -9,6 +9,7 @@ import { ReviewStage } from "./components/ReviewStage";
 import { UploadStage } from "./components/UploadStage";
 import { WorkflowSteps } from "./components/WorkflowSteps";
 import { validateUploadMeta } from "./file-policy";
+import { createAnalysisClient, type AnalysisClient } from "./analysis-client";
 import {
   inspectSource,
   rasterizeSource,
@@ -34,6 +35,8 @@ import {
   removeMark,
   resizeMark,
   type RedactSession,
+  type OCRBlock,
+  type AnalysisRun,
   type SourceDocument,
 } from "./workflow-domain";
 
@@ -45,6 +48,7 @@ export type RedactAppAdapters = {
   downloader: Downloader;
   digest(bytes: ArrayBuffer): Promise<string>;
   now(): string;
+  analysis: AnalysisClient;
 };
 
 const browserAdapters: RedactAppAdapters = {
@@ -76,6 +80,7 @@ const browserAdapters: RedactAppAdapters = {
     ).join("");
   },
   now: () => new Date().toISOString(),
+  analysis: createAnalysisClient(),
 };
 
 export function RedactApp({
@@ -90,6 +95,7 @@ export function RedactApp({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clipboardMessage, setClipboardMessage] = useState<string | null>(null);
+  const [analysisMessage, setAnalysisMessage] = useState("Rasterizing pages without changing the original file…");
 
   const visibleStage = !session
     ? "upload"
@@ -134,6 +140,7 @@ export function RedactApp({
     if (!session || !file || !inspection) return;
     setError(null);
     setBusy(true);
+    setAnalysisMessage("Rasterizing pages without changing the original file…");
     setSession(beginPreparation(session));
     try {
       const rasterPages = await adapters.rasterize(file, inspection);
@@ -143,7 +150,58 @@ export function RedactApp({
         documentId: session.source.id,
         pageNumber: index + 1,
       }));
-      setSession(openManualReview(session, pages));
+      const ocrBlocks: OCRBlock[] = [];
+      const analysisRuns: AnalysisRun[] = [];
+      try {
+        setAnalysisMessage("Loading the local OCR model and reading each page…");
+        const health = await adapters.analysis.health();
+        if (health.service !== "ready") {
+          throw new Error("Local analysis is unavailable");
+        }
+        for (const page of pages) {
+          setAnalysisMessage(`Reading page ${page.pageNumber} of ${pages.length} locally…`);
+          const result = await adapters.analysis.analyzePage(
+            {
+              documentId: session.source.id,
+              pageId: page.id,
+              pageNumber: page.pageNumber,
+              width: page.width,
+              height: page.height,
+              pngBytes: page.pngBytes,
+              level: session.configuration.level,
+              direction: session.configuration.direction,
+            },
+            undefined,
+          );
+          analysisRuns.push({
+            id: result.run.id,
+            documentId: result.run.documentId,
+            revision: session.analysisRevision,
+            status: result.run.status,
+            startedAt: result.run.startedAt,
+            completedAt: result.run.completedAt,
+            error: result.run.error,
+            pageId: result.page.id,
+            ocrModel: result.run.ocrModel,
+            ocrMs: result.run.ocrMs,
+          });
+          ocrBlocks.push(
+            ...result.ocrBlocks.map((block, index) => ({
+              id: `ocr-${page.id}-${index + 1}`,
+              documentId: session.source.id,
+              pageId: page.id,
+              pageNumber: page.pageNumber,
+              text: block.text,
+              bbox: block.bbox,
+              confidence: block.confidence,
+            })),
+          );
+        }
+        setSession(openManualReview(session, pages, { ocrBlocks, analysisRuns }));
+      } catch {
+        setError("Local analysis is unavailable. Manual review remains available.");
+        setSession(openManualReview(session, pages, { ocrBlocks, analysisRuns }));
+      }
     } catch (caught) {
       setError(messageOf(caught));
     } finally {
@@ -243,6 +301,7 @@ export function RedactApp({
             pageCount={session.source.pageCount}
             busy={busy}
             error={error}
+            status={analysisMessage}
             onRetry={prepare}
             onBack={() => {
               setError(null);

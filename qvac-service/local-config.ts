@@ -2,10 +2,13 @@ import path from "node:path";
 
 export function resolveLocalQvacPaths(appDirectory: string) {
   const qvacDirectory = path.join(appDirectory, ".qvac");
+  const runtimeHome = path.join(qvacDirectory, "runtime-home");
   return {
     qvacDirectory,
     cacheDirectory: path.join(qvacDirectory, "models"),
     configPath: path.join(qvacDirectory, "config.json"),
+    runtimeHome,
+    tempDirectory: path.join(runtimeHome, ".qvac", "tmp"),
   };
 }
 

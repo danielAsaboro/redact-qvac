@@ -34,6 +34,7 @@ export function ReviewStage({
 }) {
   const page = session.pages[session.activePageNumber - 1];
   const marks = session.marks.filter((mark) => mark.pageId === page.id);
+  const ocrBlocks = session.ocrBlocks.filter((block) => block.pageId === page.id);
   return (
     <section className="review-stage">
       <div className="review-heading">
@@ -65,6 +66,7 @@ export function ReviewStage({
             <button aria-label="Add redaction" className="add-button" onClick={() => onAdd()}>＋ Add redaction</button>
           </div>
           <p className="mark-count">{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</p>
+          {ocrBlocks.length > 0 && <section className="ocr-evidence" aria-label="Local OCR evidence"><strong>{ocrBlocks.length} text {ocrBlocks.length === 1 ? "region" : "regions"} found locally</strong><ol>{ocrBlocks.map((block) => <li key={block.id}><span>{block.text}</span><small>{block.confidence === null ? "confidence unavailable" : `${Math.round(block.confidence * 100)}% recognition`}</small></li>)}</ol></section>}
           {marks.length === 0 ? (
             <div className="empty-marks"><strong>Draw on the original</strong><p>Drag over anything private. You can move or resize the region afterward.</p></div>
           ) : (

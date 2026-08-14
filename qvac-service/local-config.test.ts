@@ -9,6 +9,14 @@ describe("standalone QVAC configuration", () => {
       qvacDirectory: path.join("/workspace/redact", ".qvac"),
       cacheDirectory: path.join("/workspace/redact", ".qvac", "models"),
       configPath: path.join("/workspace/redact", ".qvac", "config.json"),
+      runtimeHome: path.join("/workspace/redact", ".qvac", "runtime-home"),
+      tempDirectory: path.join(
+        "/workspace/redact",
+        ".qvac",
+        "runtime-home",
+        ".qvac",
+        "tmp",
+      ),
     });
   });
 

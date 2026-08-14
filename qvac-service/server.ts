@@ -91,7 +91,10 @@ export function createQvacService(options: ServiceOptions): Server {
       busy = true;
       try {
         sendJson(request, response, 200, await options.analyzer.analyzePage(input));
-      } catch {
+      } catch (error) {
+        process.stderr.write(
+          `Redact QVAC analyze-page failed: ${error instanceof Error ? error.message : String(error)}\n`,
+        );
         sendJson(request, response, 503, {
           error: { code: "analyzer_unavailable", message: "Local analysis is unavailable" },
         });

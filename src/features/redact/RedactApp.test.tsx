@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RedactApp, type RedactAppAdapters } from "./RedactApp";
+import type { AnalysisClient } from "./analysis-client";
 import type { RasterPage } from "./workflow-domain";
 
 const page: RasterPage = {
@@ -17,6 +18,31 @@ const page: RasterPage = {
 function adapters(
   overrides: Partial<RedactAppAdapters> = {},
 ): RedactAppAdapters {
+  const analysis: AnalysisClient = {
+    health: vi.fn().mockResolvedValue({
+      service: "ready",
+      busy: false,
+      models: [{ kind: "ocr", id: "qvac-ocr-latin", state: "not_loaded" }],
+    }),
+    analyzePage: vi.fn().mockResolvedValue({
+      run: {
+        id: "run-1",
+        documentId: "document-sha256-source",
+        status: "ready",
+        startedAt: "2026-08-14T10:00:00.000Z",
+        completedAt: "2026-08-14T10:00:01.000Z",
+        ocrModel: "qvac-ocr-latin",
+        ocrMs: 1000,
+        error: null,
+      },
+      page: { id: "page-1", number: 1, width: 1200, height: 1600 },
+      ocrBlocks: [
+        { text: "Maya Chen", bbox: [211, 114, 397, 158], confidence: 0.93 },
+        { text: "maya.chen@example com", bbox: [213, 166, 478, 194], confidence: 0.46 },
+      ],
+      candidates: [],
+    }),
+  };
   return {
     inspect: vi.fn().mockResolvedValue({
       kind: "image",
@@ -37,6 +63,7 @@ function adapters(
     downloader: { save: vi.fn() },
     digest: vi.fn().mockResolvedValue("sha256-source"),
     now: () => "2026-08-14T10:00:00.000Z",
+    analysis,
     ...overrides,
   };
 }
@@ -127,6 +154,15 @@ describe("Redact application", () => {
     expect(await screen.findByText("Original")).toBeInTheDocument();
     expect(screen.getByText("Safe-share preview")).toBeInTheDocument();
     expect(appAdapters.rasterize).toHaveBeenCalledOnce();
+    expect(appAdapters.analysis.analyzePage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageId: "page-1",
+        level: "confidential",
+        direction: "Hide Apollo references",
+      }),
+      undefined,
+    );
+    expect(screen.getByText("2 text regions found locally")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Add redaction" }));
     expect(screen.getAllByText("1 redaction")).toHaveLength(2);
@@ -173,6 +209,31 @@ describe("Redact application", () => {
 
     expect(screen.getByLabelText("Redaction horizontal position")).toHaveValue(26);
     expect(screen.getByLabelText("Redaction vertical position")).toHaveValue(33);
+  });
+
+  it("opens manual review when local inference is unavailable", async () => {
+    const user = userEvent.setup();
+    const appAdapters = adapters({
+      analysis: {
+        health: vi.fn().mockResolvedValue({ service: "ready", busy: false, models: [] }),
+        analyzePage: vi.fn().mockRejectedValue(new Error("Local analysis is unavailable")),
+      },
+    });
+    render(<RedactApp adapters={appAdapters} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1])], "chat-private.png", { type: "image/png" }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+
+    expect(await screen.findByText("Safe-share preview")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Local analysis is unavailable. Manual review remains available.",
+    );
+    await user.click(screen.getByRole("button", { name: "Add redaction" }));
+    expect(screen.getAllByText("1 redaction")).toHaveLength(2);
   });
 
   it("keeps the generated copy available when clipboard access fails", async () => {

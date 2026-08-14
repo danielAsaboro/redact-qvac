@@ -60,6 +60,16 @@ export type RedactionMark = {
 
 export type CandidateStatus = "proposed" | "accepted" | "rejected";
 
+export type OCRBlock = {
+  id: string;
+  documentId: string;
+  pageId: string;
+  pageNumber: number;
+  text: string;
+  bbox: [number, number, number, number];
+  confidence: number | null;
+};
+
 export type RedactionCandidate = {
   id: string;
   documentId: string;
@@ -84,6 +94,9 @@ export type AnalysisRun = {
   startedAt: string;
   completedAt: string | null;
   error: string | null;
+  pageId?: string;
+  ocrModel?: string;
+  ocrMs?: number | null;
 };
 
 export type AuditEntry = {
@@ -115,6 +128,7 @@ export type RedactSession = {
   lastAnalyzedRevision: number | null;
   marks: RedactionMark[];
   candidates: RedactionCandidate[];
+  ocrBlocks: OCRBlock[];
   analysisRuns: AnalysisRun[];
   audit: AuditEntry[];
   generatedCopy: GeneratedCopyRecord | null;
@@ -132,6 +146,7 @@ export function createSession(source: SourceDocument, at: string): RedactSession
     lastAnalyzedRevision: null,
     marks: [],
     candidates: [],
+    ocrBlocks: [],
     analysisRuns: [],
     audit: [
       {
@@ -175,6 +190,7 @@ export function beginPreparation(session: RedactSession): RedactSession {
 export function openManualReview(
   session: RedactSession,
   pages: RasterPage[],
+  evidence: { ocrBlocks?: OCRBlock[]; analysisRuns?: AnalysisRun[] } = {},
 ): RedactSession {
   if (pages.length === 0) throw new Error("At least one page is required");
   return {
@@ -182,6 +198,8 @@ export function openManualReview(
     stage: "review",
     pages,
     activePageNumber: 1,
+    ocrBlocks: evidence.ocrBlocks ?? session.ocrBlocks,
+    analysisRuns: evidence.analysisRuns ?? session.analysisRuns,
     generatedCopy: null,
   };
 }

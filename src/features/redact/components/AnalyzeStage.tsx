@@ -1,8 +1,9 @@
-export function AnalyzeStage({ filename, pageCount, busy, error, onRetry, onBack }: {
+export function AnalyzeStage({ filename, pageCount, busy, error, status, onRetry, onBack }: {
   filename: string;
   pageCount: number;
   busy: boolean;
   error: string | null;
+  status: string;
   onRetry(): void;
   onBack(): void;
 }) {
@@ -12,7 +13,7 @@ export function AnalyzeStage({ filename, pageCount, busy, error, onRetry, onBack
       <p className="stage-kicker">Preparing locally</p>
       <h1>{error ? "We could not prepare this document" : "Building your review copy"}</h1>
       <p>{filename} · {pageCount} {pageCount === 1 ? "page" : "pages"}</p>
-      {!error && <p className="analysis-status">Rasterizing pages without changing the original file…</p>}
+      {!error && <p className="analysis-status">{status}</p>}
       {error && <p className="error-banner" role="alert">{error}</p>}
       {error && <div className="stage-actions split-actions"><button className="secondary-button" onClick={onBack}>Back</button><button className="primary-button" disabled={busy} onClick={onRetry}>Try again</button></div>}
     </section>
