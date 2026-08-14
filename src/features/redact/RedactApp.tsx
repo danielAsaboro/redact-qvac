@@ -38,6 +38,7 @@ import {
   type RedactSession,
   type OCRBlock,
   type AnalysisRun,
+  type RedactionCandidate,
   type SourceDocument,
 } from "./workflow-domain";
 
@@ -152,6 +153,7 @@ export function RedactApp({
         pageNumber: index + 1,
       }));
       const ocrBlocks: OCRBlock[] = [];
+      const candidates: RedactionCandidate[] = [];
       const analysisRuns: AnalysisRun[] = [];
       try {
         setAnalysisMessage("Loading the local OCR model and reading each page…");
@@ -185,12 +187,13 @@ export function RedactApp({
             pageId: result.page.id,
             ocrModel: result.run.ocrModel,
             ocrMs: result.run.ocrMs,
+            reasoningModel: result.run.reasoningModel,
+            reasoningMs: result.run.reasoningMs,
           });
-          ocrBlocks.push(
-            ...result.ocrBlocks.flatMap((block, index) => {
+          const normalizedBlocks = result.ocrBlocks.map((block, index) => {
               const bbox = normalizeOcrBbox(block.bbox, page.width, page.height);
               return bbox
-                ? [{
+                ? {
                     id: `ocr-${page.id}-${index + 1}`,
                     documentId: session.source.id,
                     pageId: page.id,
@@ -199,15 +202,34 @@ export function RedactApp({
                     rawBbox: block.bbox,
                     bbox,
                     confidence: block.confidence,
+                  }
+                : null;
+            });
+          ocrBlocks.push(...normalizedBlocks.filter((block): block is OCRBlock => block !== null));
+          candidates.push(
+            ...result.candidates.flatMap((candidate, index) => {
+              const evidence = normalizedBlocks[candidate.blockIndex];
+              return evidence
+                ? [{
+                    id: `candidate-${page.id}-${candidate.blockIndex}-${index + 1}`,
+                    documentId: session.source.id,
+                    pageId: page.id,
+                    pageNumber: page.pageNumber,
+                    ...evidence.bbox,
+                    label: candidate.label,
+                    evidenceText: evidence.text,
+                    explanation: candidate.explanation,
+                    confidence: candidate.confidence,
+                    status: "proposed" as const,
                   }]
                 : [];
             }),
           );
         }
-        setSession(openManualReview(session, pages, { ocrBlocks, analysisRuns }));
+        setSession(openManualReview(session, pages, { ocrBlocks, candidates, analysisRuns }));
       } catch {
         setError("Local analysis is unavailable. Manual review remains available.");
-        setSession(openManualReview(session, pages, { ocrBlocks, analysisRuns }));
+        setSession(openManualReview(session, pages, { ocrBlocks, candidates, analysisRuns }));
       }
     } catch (caught) {
       setError(messageOf(caught));
@@ -220,7 +242,7 @@ export function RedactApp({
     if (!session) return;
     setBusy(true);
     setError(null);
-    const exporting = finishReview(session);
+    const exporting = finishReview(session, { allowUnresolved: true });
     setSession(exporting);
     try {
       const copy = await adapters.exportCopy({

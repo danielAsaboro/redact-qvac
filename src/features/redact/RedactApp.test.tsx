@@ -33,6 +33,8 @@ function adapters(
         completedAt: "2026-08-14T10:00:01.000Z",
         ocrModel: "qvac-ocr-latin",
         ocrMs: 1000,
+        reasoningModel: "qwen3-600m-instruct-q4",
+        reasoningMs: 200,
         error: null,
       },
       page: { id: "page-1", number: 1, width: 1200, height: 1600 },
@@ -40,7 +42,10 @@ function adapters(
         { text: "Maya Chen", bbox: [211, 114, 397, 158], confidence: 0.93 },
         { text: "maya.chen@example com", bbox: [213, 166, 478, 194], confidence: 0.46 },
       ],
-      candidates: [],
+      candidates: [
+        { blockIndex: 0, label: "name", explanation: "A direct personal identifier", confidence: 0.96 },
+        { blockIndex: 1, label: "email", explanation: "A personal contact address", confidence: 0.91 },
+      ],
     }),
   };
   return {
@@ -163,6 +168,8 @@ describe("Redact application", () => {
       undefined,
     );
     expect(screen.getByText("2 text regions found locally")).toBeInTheDocument();
+    expect(screen.getByText("2 suggested redactions")).toBeInTheDocument();
+    expect(screen.getByLabelText("Suggested name: Maya Chen")).toBeInTheDocument();
     expect(screen.getByLabelText("OCR evidence Maya Chen")).toHaveStyle({
       left: "17.583333%",
       top: "7.125%",

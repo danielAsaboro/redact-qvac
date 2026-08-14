@@ -106,6 +106,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .document-surface[data-interactive="true"] { cursor: crosshair; touch-action: none; user-select: none; }
 .document-surface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .ocr-surface-evidence { position: absolute; z-index: 1; min-width: 2px; min-height: 2px; background: rgba(40,104,78,.08); border: 1.5px dashed var(--green-2); pointer-events: none; }
+.candidate-surface-evidence { position: absolute; z-index: 2; min-width: 2px; min-height: 2px; background: rgba(233,101,61,.12); border: 2px solid var(--orange); pointer-events: none; }
 .surface-mark { position: absolute; z-index: 2; min-width: 2px; min-height: 2px; }
 .surface-mark[data-mode="original"] { background: rgba(233,101,61,.18); border: 2px solid var(--orange); }
 .surface-mark[data-mode="original"] { cursor: grab; touch-action: none; }
@@ -129,6 +130,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .ocr-evidence ol { display: grid; gap: .45rem; max-height: 190px; margin: .65rem 0 0; padding: 0; overflow: auto; list-style: none; }
 .ocr-evidence li { display: grid; gap: .12rem; padding-top: .4rem; border-top: 1px solid #d5e1d7; font-size: .72rem; }
 .ocr-evidence small { color: var(--muted); font-size: .62rem; }
+.candidate-list { margin: .75rem 0; padding: .75rem; background: #fff5ec; border: 1px solid #efc7a9; border-radius: 8px; }
+.candidate-list > strong { font-size: .76rem; }
+.candidate-list ol { display: grid; gap: .55rem; margin: .65rem 0 0; padding: 0; list-style: none; }
+.candidate-list li { padding: .55rem; background: var(--paper); border: 1px solid #efd5c0; border-radius: 6px; }
+.candidate-list li > div { display: flex; justify-content: space-between; gap: .5rem; color: var(--orange); font-size: .62rem; text-transform: uppercase; }
+.candidate-list b { display: block; margin-top: .3rem; font-size: .72rem; }
+.candidate-list p { margin: .25rem 0 0; color: var(--muted); font-size: .66rem; line-height: 1.35; }
 .empty-marks { padding: 2rem 1rem; text-align: center; border: 1px dashed #b7beb8; border-radius: 8px; }
 .empty-marks p { color: var(--muted); font-size: .8rem; line-height: 1.5; }
 .editable-marks { display: grid; gap: .8rem; padding: 0; list-style: none; }

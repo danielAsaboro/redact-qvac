@@ -35,6 +35,7 @@ export function ReviewStage({
   const page = session.pages[session.activePageNumber - 1];
   const marks = session.marks.filter((mark) => mark.pageId === page.id);
   const ocrBlocks = session.ocrBlocks.filter((block) => block.pageId === page.id);
+  const candidates = session.candidates.filter((candidate) => candidate.pageId === page.id);
   return (
     <section className="review-stage">
       <div className="review-heading">
@@ -53,7 +54,7 @@ export function ReviewStage({
         <div className="comparison-grid">
           <article>
             <header><strong>Original</strong><span>{ocrBlocks.length > 0 ? `${ocrBlocks.length} detected regions · drag to draw` : "Drag to draw · drag marks to move"}</span></header>
-            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} evidence={ocrBlocks} mode="original" onCreate={onAdd} onChange={onGeometry} />
+            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} evidence={ocrBlocks} candidates={candidates} mode="original" onCreate={onAdd} onChange={onGeometry} />
           </article>
           <article>
             <header><strong>Safe-share preview</strong><span>{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</span></header>
@@ -67,6 +68,7 @@ export function ReviewStage({
           </div>
           <p className="mark-count">{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</p>
           {ocrBlocks.length > 0 && <section className="ocr-evidence" aria-label="Local OCR evidence"><strong>{ocrBlocks.length} text {ocrBlocks.length === 1 ? "region" : "regions"} found locally</strong><ol>{ocrBlocks.map((block) => <li key={block.id}><span>{block.text}</span><small>{block.confidence === null ? "confidence unavailable" : `${Math.round(block.confidence * 100)}% recognition`}</small></li>)}</ol></section>}
+          {candidates.length > 0 && <section className="candidate-list" aria-label="Suggested redactions"><strong>{candidates.length} suggested {candidates.length === 1 ? "redaction" : "redactions"}</strong><ol>{candidates.map((candidate) => <li key={candidate.id}><div><span>{candidate.label}</span><small>{Math.round((candidate.confidence ?? 0) * 100)}% sensitivity</small></div><b>{candidate.evidenceText}</b><p>{candidate.explanation}</p></li>)}</ol></section>}
           {marks.length === 0 ? (
             <div className="empty-marks"><strong>Draw on the original</strong><p>Drag over anything private. You can move or resize the region afterward.</p></div>
           ) : (

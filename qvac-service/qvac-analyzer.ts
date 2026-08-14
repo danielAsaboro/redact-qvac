@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import type { AnalysisResponse } from "../src/features/redact/analysis-contract";
 import type { DocumentAnalyzer } from "./analyzer";
+import type { DocumentReasoner } from "./reasoning";
 
 const qvacBlockSchema = z.object({
   text: z.string(),
@@ -41,6 +42,7 @@ type Options = {
   modelSource: unknown;
   readImageSize?: (bytes: Buffer) => Promise<{ width: number; height: number }>;
   now?: () => number;
+  reasoner?: DocumentReasoner;
 };
 
 export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
@@ -97,7 +99,9 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
                 ? "loading"
                 : "not_loaded",
         },
-        { kind: "reasoning", id: "not-configured", state: "not_loaded" },
+        options.reasoner
+          ? { kind: "reasoning", ...options.reasoner.getState() }
+          : { kind: "reasoning", id: "not-configured", state: "not_loaded" },
       ],
     }),
     async analyzePage(input): Promise<AnalysisResponse> {
@@ -118,8 +122,24 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
         options: { paragraph: false },
       });
       const [unknownBlocks] = await Promise.all([operation.blocks, operation.stats]);
-      const blocks = z.array(qvacBlockSchema).parse(unknownBlocks);
-      const completed = now();
+      const blocks = z
+        .array(qvacBlockSchema)
+        .parse(unknownBlocks)
+        .filter((block) => block.text.trim().length > 0);
+      const ocrCompleted = now();
+      const reasoning = options.reasoner
+        ? await options.reasoner.classify({
+            documentId: input.documentId,
+            level: input.level,
+            direction: input.direction,
+            blocks: blocks.map((block) => ({
+              text: block.text,
+              bbox: block.bbox,
+              confidence: block.confidence ?? null,
+            })),
+          })
+        : { candidates: [], reasoningMs: null };
+      const completed = options.reasoner ? now() : ocrCompleted;
       return {
         run: {
           id: `analysis-${input.documentId}-${input.pageId}-${started}`,
@@ -128,7 +148,9 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
           startedAt: new Date(started).toISOString(),
           completedAt: new Date(completed).toISOString(),
           ocrModel: "qvac-ocr-latin",
-          ocrMs: completed - started,
+          ocrMs: ocrCompleted - started,
+          reasoningModel: options.reasoner?.getState().id ?? "not-configured",
+          reasoningMs: reasoning.reasoningMs,
           error: null,
         },
         page: {
@@ -142,10 +164,11 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
           bbox: block.bbox,
           confidence: block.confidence ?? null,
         })),
-        candidates: [],
+        candidates: reasoning.candidates,
       };
     },
     async close() {
+      await options.reasoner?.close();
       if (modelId) {
         await options.runtime.unloadModel({ modelId, clearStorage: false });
         modelId = null;

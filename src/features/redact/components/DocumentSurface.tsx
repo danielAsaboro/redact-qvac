@@ -1,5 +1,5 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
-import type { OCRBlock, RasterPage, RedactionMark } from "../workflow-domain";
+import type { OCRBlock, RasterPage, RedactionCandidate, RedactionMark } from "../workflow-domain";
 
 export type RedactionGeometry = Pick<
   RedactionMark,
@@ -19,6 +19,7 @@ export function DocumentSurface({
   page,
   marks,
   evidence = [],
+  candidates = [],
   mode,
   onCreate,
   onChange,
@@ -26,6 +27,7 @@ export function DocumentSurface({
   page: RasterPage;
   marks: RedactionMark[];
   evidence?: OCRBlock[];
+  candidates?: RedactionCandidate[];
   mode: "original" | "safe";
   onCreate?(geometry: RedactionGeometry): void;
   onChange?(id: string, geometry: RedactionGeometry): void;
@@ -125,6 +127,7 @@ export function DocumentSurface({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={source} alt={`Document page ${page.pageNumber}`} draggable={false} />
       {mode === "original" && evidence.map((block) => <span aria-label={`OCR evidence ${block.text}`} className="ocr-surface-evidence" key={block.id} style={{ left: `${block.bbox.x}%`, top: `${block.bbox.y}%`, width: `${block.bbox.width}%`, height: `${block.bbox.height}%` }} />)}
+      {mode === "original" && candidates.map((candidate) => <span aria-label={`Suggested ${candidate.label}: ${candidate.evidenceText}`} className="candidate-surface-evidence" key={candidate.id} style={{ left: `${candidate.x}%`, top: `${candidate.y}%`, width: `${candidate.width}%`, height: `${candidate.height}%` }} />)}
       {marks.map((mark, index) => (
         <div
           aria-label={mode === "original" ? `Move redaction ${index + 1}` : undefined}

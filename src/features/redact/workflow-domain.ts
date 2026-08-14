@@ -103,6 +103,8 @@ export type AnalysisRun = {
   pageId?: string;
   ocrModel?: string;
   ocrMs?: number | null;
+  reasoningModel?: string;
+  reasoningMs?: number | null;
 };
 
 export type AuditEntry = {
@@ -196,7 +198,11 @@ export function beginPreparation(session: RedactSession): RedactSession {
 export function openManualReview(
   session: RedactSession,
   pages: RasterPage[],
-  evidence: { ocrBlocks?: OCRBlock[]; analysisRuns?: AnalysisRun[] } = {},
+  evidence: {
+    ocrBlocks?: OCRBlock[];
+    candidates?: RedactionCandidate[];
+    analysisRuns?: AnalysisRun[];
+  } = {},
 ): RedactSession {
   if (pages.length === 0) throw new Error("At least one page is required");
   return {
@@ -205,6 +211,7 @@ export function openManualReview(
     pages,
     activePageNumber: 1,
     ocrBlocks: evidence.ocrBlocks ?? session.ocrBlocks,
+    candidates: evidence.candidates ?? session.candidates,
     analysisRuns: evidence.analysisRuns ?? session.analysisRuns,
     generatedCopy: null,
   };
