@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "redact:test-files": "node qvac-service/prepare-test-files.mjs",
-    "qvac:ocr-smoke": "node qvac-service/ocr-smoke.mjs"
+    "qvac:ocr-smoke": "node qvac-service/ocr-smoke.mjs",
+    "qvac:service": "tsx qvac-service/index.ts"
   },
   "dependencies": {
     "@qvac/sdk": "0.17.1",
@@ -23,7 +24,8 @@
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "6.2.108",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
@@ -40,6 +42,7 @@
     "jsdom": "30.0.1",
     "sharp": "0.35.3",
     "tailwindcss": "^4",
+    "tsx": "4.20.6",
     "typescript": "^5",
     "vitest": "4.1.10"
   }
