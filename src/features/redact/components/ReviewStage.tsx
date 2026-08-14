@@ -21,6 +21,7 @@ export function ReviewStage({
   onRemove,
   onAccept,
   onReject,
+  onRetry,
   onDone,
 }: {
   session: RedactSession;
@@ -34,6 +35,7 @@ export function ReviewStage({
   onRemove(id: string): void;
   onAccept(id: string): void;
   onReject(id: string): void;
+  onRetry(): void;
   onDone(): void;
 }) {
   const page = session.pages[session.activePageNumber - 1];
@@ -56,7 +58,7 @@ export function ReviewStage({
         </div>
       </div>
       {unresolvedCount > 0 && <p className="review-gate" role="status">Review {unresolvedCount} remaining {unresolvedCount === 1 ? "suggestion" : "suggestions"} before creating a safe copy.</p>}
-      {error && <p className="error-banner" role="alert">{error}</p>}
+      {error && <div className="review-error"><p className="error-banner" role="alert">{error}</p><button className="secondary-button" disabled={busy} onClick={onRetry}>Retry local analysis</button></div>}
       <div className="review-layout">
         <div className="comparison-grid">
           <article>

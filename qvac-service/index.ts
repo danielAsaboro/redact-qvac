@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { createQvacOcrAnalyzer } from "./qvac-analyzer";
 import { resolveLocalQvacPaths } from "./local-config";
 import { createStructuredReasoner } from "./reasoning";
-import { createQvacService } from "./server";
+import { closeQvacService, createQvacService } from "./server";
 
 const port = Number.parseInt(process.env.REDACT_QVAC_PORT ?? "4317", 10);
 const appDirectory = fileURLToPath(new URL("../", import.meta.url));
@@ -40,9 +40,11 @@ async function main() {
     process.stdout.write(`Redact QVAC service listening on http://127.0.0.1:${port}\n`);
   });
 
+  let closing = false;
   async function close() {
-    server.close();
-    await analyzer.close();
+    if (closing) return;
+    closing = true;
+    await closeQvacService(server, analyzer);
   }
 
   process.once("SIGINT", close);

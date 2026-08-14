@@ -19,7 +19,7 @@ describe("local analysis client", () => {
     await expect(client.health()).resolves.toMatchObject({ service: "ready" });
     expect(fetchImpl).toHaveBeenCalledWith(
       "http://127.0.0.1:4317/health",
-      expect.objectContaining({ signal: undefined }),
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -109,5 +109,45 @@ describe("local analysis client", () => {
         direction: "",
       }),
     ).rejects.toThrow("invalid analysis response");
+  });
+
+  it("aborts a stalled request at the configured local timeout", async () => {
+    vi.useFakeTimers();
+    const client = createAnalysisClient({
+      requestTimeoutMs: 25,
+      fetchImpl: vi.fn(async (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError")),
+          );
+        }),
+      ),
+    });
+
+    const assertion = expect(client.health()).rejects.toThrow(
+      "Local analysis request timed out",
+    );
+    await vi.advanceTimersByTimeAsync(25);
+    await assertion;
+    vi.useRealTimers();
+  });
+
+  it("reports caller cancellation separately from a timeout", async () => {
+    const controller = new AbortController();
+    const client = createAnalysisClient({
+      fetchImpl: vi.fn(async (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError")),
+          );
+        }),
+      ),
+    });
+
+    const assertion = expect(client.health(controller.signal)).rejects.toThrow(
+      "Local analysis request was cancelled",
+    );
+    controller.abort();
+    await assertion;
   });
 });

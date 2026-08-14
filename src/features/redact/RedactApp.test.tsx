@@ -165,7 +165,7 @@ describe("Redact application", () => {
         level: "confidential",
         direction: "Hide Apollo references",
       }),
-      undefined,
+      expect.any(AbortSignal),
     );
     expect(screen.getByText("2 text regions found locally")).toBeInTheDocument();
     expect(screen.getByText("2 suggested redactions")).toBeInTheDocument();
@@ -255,6 +255,64 @@ describe("Redact application", () => {
     );
     await user.click(screen.getByRole("button", { name: "Add redaction" }));
     expect(screen.getAllByText("1 redaction")).toHaveLength(2);
+  });
+
+  it("cancels local analysis and ignores its stale completion", async () => {
+    const user = userEvent.setup();
+    let resolveLate!: (value: Awaited<ReturnType<AnalysisClient["analyzePage"]>>) => void;
+    const base = adapters();
+    const lateResult = await base.analysis.analyzePage({
+      documentId: "document-sha256-source",
+      pageId: "page-1",
+      pageNumber: 1,
+      width: 1200,
+      height: 1600,
+      pngBytes: page.pngBytes,
+      level: "private",
+      direction: "",
+    });
+    const analyzePage = vi.fn(
+      () => new Promise<Awaited<ReturnType<AnalysisClient["analyzePage"]>>>((resolve) => {
+        resolveLate = resolve;
+      }),
+    );
+    const appAdapters = adapters({ analysis: { health: base.analysis.health, analyzePage } });
+    render(<RedactApp adapters={appAdapters} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1])], "chat-private.png", { type: "image/png" }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+    await user.click(await screen.findByRole("button", { name: "Continue without local analysis" }));
+
+    expect(await screen.findByText("Safe-share preview")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Local analysis was cancelled");
+    resolveLate(lateResult);
+    await Promise.resolve();
+    expect(screen.queryByText("2 suggested redactions")).not.toBeInTheDocument();
+  });
+
+  it("retries analysis from manual fallback", async () => {
+    const user = userEvent.setup();
+    const appAdapters = adapters();
+    vi.mocked(appAdapters.analysis.analyzePage).mockRejectedValueOnce(
+      new Error("Local analysis request timed out"),
+    );
+    render(<RedactApp adapters={appAdapters} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1])], "chat-private.png", { type: "image/png" }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+    expect(await screen.findByRole("button", { name: "Retry local analysis" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Retry local analysis" }));
+
+    expect(await screen.findByText("2 suggested redactions")).toBeInTheDocument();
+    expect(appAdapters.analysis.analyzePage).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the generated copy available when clipboard access fails", async () => {

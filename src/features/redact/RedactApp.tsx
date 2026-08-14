@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AnalyzeStage } from "./components/AnalyzeStage";
 import { CompleteStage } from "./components/CompleteStage";
@@ -100,6 +100,20 @@ export function RedactApp({
   const [error, setError] = useState<string | null>(null);
   const [clipboardMessage, setClipboardMessage] = useState<string | null>(null);
   const [analysisMessage, setAnalysisMessage] = useState("Rasterizing pages without changing the original file…");
+  const [canCancel, setCanCancel] = useState(false);
+  const analysisRequest = useRef<AbortController | null>(null);
+  const analysisSequence = useRef(0);
+  const preparedPages = useRef<RedactSession["pages"]>([]);
+  const partialEvidence = useRef<{
+    ocrBlocks: OCRBlock[];
+    candidates: RedactionCandidate[];
+    analysisRuns: AnalysisRun[];
+  }>({ ocrBlocks: [], candidates: [], analysisRuns: [] });
+
+  useEffect(() => () => {
+    analysisRequest.current?.abort();
+    analysisSequence.current += 1;
+  }, []);
 
   const visibleStage = !session
     ? "upload"
@@ -142,6 +156,13 @@ export function RedactApp({
 
   async function prepare() {
     if (!session || !file || !inspection) return;
+    analysisRequest.current?.abort();
+    const controller = new AbortController();
+    analysisRequest.current = controller;
+    const requestId = ++analysisSequence.current;
+    preparedPages.current = [];
+    setCanCancel(false);
+    partialEvidence.current = { ocrBlocks: [], candidates: [], analysisRuns: [] };
     setError(null);
     setBusy(true);
     setAnalysisMessage("Rasterizing pages without changing the original file…");
@@ -154,15 +175,21 @@ export function RedactApp({
         documentId: session.source.id,
         pageNumber: index + 1,
       }));
+      if (requestId !== analysisSequence.current) return;
+      preparedPages.current = pages;
+      setCanCancel(true);
       const ocrBlocks: OCRBlock[] = [];
       const candidates: RedactionCandidate[] = [];
       const analysisRuns: AnalysisRun[] = [];
+      partialEvidence.current = { ocrBlocks, candidates, analysisRuns };
       try {
         setAnalysisMessage("Loading the local OCR model and reading each page…");
-        const health = await adapters.analysis.health();
+        const health = await adapters.analysis.health(controller.signal);
+        if (requestId !== analysisSequence.current) return;
         if (health.service !== "ready") {
           throw new Error("Local analysis is unavailable");
         }
+        if (health.busy) throw new Error("Local analyzer is busy");
         for (const page of pages) {
           setAnalysisMessage(`Reading page ${page.pageNumber} of ${pages.length} locally…`);
           const result = await adapters.analysis.analyzePage(
@@ -176,8 +203,9 @@ export function RedactApp({
               level: session.configuration.level,
               direction: session.configuration.direction,
             },
-            undefined,
+            controller.signal,
           );
+          if (requestId !== analysisSequence.current) return;
           analysisRuns.push({
             id: result.run.id,
             documentId: result.run.documentId,
@@ -228,16 +256,37 @@ export function RedactApp({
             }),
           );
         }
+        if (requestId !== analysisSequence.current) return;
         setSession(openManualReview(session, pages, { ocrBlocks, candidates, analysisRuns }));
-      } catch {
-        setError("Local analysis is unavailable. Manual review remains available.");
+      } catch (caught) {
+        if (requestId !== analysisSequence.current) return;
+        const detail = messageOf(caught);
+        setError(`${detail}. Manual review remains available.`);
         setSession(openManualReview(session, pages, { ocrBlocks, candidates, analysisRuns }));
       }
     } catch (caught) {
+      if (requestId !== analysisSequence.current) return;
       setError(messageOf(caught));
     } finally {
-      setBusy(false);
+      if (requestId === analysisSequence.current) {
+        setCanCancel(false);
+        setBusy(false);
+        analysisRequest.current = null;
+      }
     }
+  }
+
+  function cancelAnalysis() {
+    if (!session || preparedPages.current.length === 0) return;
+    analysisRequest.current?.abort();
+    analysisRequest.current = null;
+    analysisSequence.current += 1;
+    setBusy(false);
+    setCanCancel(false);
+    setError("Local analysis was cancelled. Manual review remains available.");
+    setSession(
+      openManualReview(session, preparedPages.current, partialEvidence.current),
+    );
   }
 
   async function createCopy() {
@@ -340,6 +389,8 @@ export function RedactApp({
             busy={busy}
             error={error}
             status={analysisMessage}
+            canCancel={canCancel}
+            onCancel={cancelAnalysis}
             onRetry={prepare}
             onBack={() => {
               setError(null);
@@ -388,6 +439,7 @@ export function RedactApp({
             onRemove={(id) => setSession(removeMark(session, id, adapters.now()))}
             onAccept={(id) => setSession(acceptCandidate(session, id, adapters.now()))}
             onReject={(id) => setSession(rejectCandidate(session, id, adapters.now()))}
+            onRetry={prepare}
             onDone={createCopy}
           />
         )}
