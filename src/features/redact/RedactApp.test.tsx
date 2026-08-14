@@ -177,9 +177,17 @@ describe("Redact application", () => {
       height: "2.75%",
     });
 
+    expect(screen.getByRole("button", { name: "Done" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Accept name proposal" }));
+    await user.click(screen.getByRole("button", { name: "Reject email proposal" }));
+    expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
+    expect(screen.getByText("Accepted local suggestion")).toBeInTheDocument();
+    expect(screen.getByText("Rejected local suggestion")).toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: "Add redaction" }));
-    expect(screen.getAllByText("1 redaction")).toHaveLength(2);
-    const width = screen.getByLabelText("Redaction width");
+    expect(screen.getAllByText("2 redactions")).toHaveLength(2);
+    const widths = screen.getAllByLabelText("Redaction width");
+    const width = widths[widths.length - 1];
     await user.clear(width);
     await user.type(width, "35");
     expect(width).toHaveValue(35);
@@ -267,6 +275,8 @@ describe("Redact application", () => {
     await screen.findByText("Privacy level");
     await user.click(screen.getByRole("button", { name: "Prepare for review" }));
     await screen.findByText("Safe-share preview");
+    await user.click(screen.getByRole("button", { name: "Accept name proposal" }));
+    await user.click(screen.getByRole("button", { name: "Reject email proposal" }));
     await user.click(screen.getByRole("button", { name: "Done" }));
     await screen.findByRole("heading", { name: "Your safe copy is ready" });
     await user.click(screen.getByRole("button", { name: "Copy to clipboard" }));

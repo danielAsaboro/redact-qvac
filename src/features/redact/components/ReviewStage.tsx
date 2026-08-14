@@ -19,6 +19,8 @@ export function ReviewStage({
   onResize,
   onGeometry,
   onRemove,
+  onAccept,
+  onReject,
   onDone,
 }: {
   session: RedactSession;
@@ -30,12 +32,16 @@ export function ReviewStage({
   onResize(id: string, width: number, height: number): void;
   onGeometry(id: string, geometry: RedactionGeometry): void;
   onRemove(id: string): void;
+  onAccept(id: string): void;
+  onReject(id: string): void;
   onDone(): void;
 }) {
   const page = session.pages[session.activePageNumber - 1];
   const marks = session.marks.filter((mark) => mark.pageId === page.id);
   const ocrBlocks = session.ocrBlocks.filter((block) => block.pageId === page.id);
   const candidates = session.candidates.filter((candidate) => candidate.pageId === page.id);
+  const proposedCandidates = candidates.filter((candidate) => candidate.status === "proposed");
+  const unresolvedCount = session.candidates.filter((candidate) => candidate.status === "proposed").length;
   return (
     <section className="review-stage">
       <div className="review-heading">
@@ -46,15 +52,16 @@ export function ReviewStage({
         </div>
         <div className="review-actions">
           <button className="secondary-button" onClick={() => onSession({ ...session, stage: "configure" })}>Change settings</button>
-          <button aria-label="Done" className="primary-button" disabled={busy} onClick={onDone}>{busy ? "Creating…" : "Done"} <span>→</span></button>
+          <button aria-label="Done" className="primary-button" disabled={busy || unresolvedCount > 0} onClick={onDone}>{busy ? "Creating…" : "Done"} <span>→</span></button>
         </div>
       </div>
+      {unresolvedCount > 0 && <p className="review-gate" role="status">Review {unresolvedCount} remaining {unresolvedCount === 1 ? "suggestion" : "suggestions"} before creating a safe copy.</p>}
       {error && <p className="error-banner" role="alert">{error}</p>}
       <div className="review-layout">
         <div className="comparison-grid">
           <article>
             <header><strong>Original</strong><span>{ocrBlocks.length > 0 ? `${ocrBlocks.length} detected regions · drag to draw` : "Drag to draw · drag marks to move"}</span></header>
-            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} evidence={ocrBlocks} candidates={candidates} mode="original" onCreate={onAdd} onChange={onGeometry} />
+            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} evidence={ocrBlocks} candidates={proposedCandidates} mode="original" onCreate={onAdd} onChange={onGeometry} />
           </article>
           <article>
             <header><strong>Safe-share preview</strong><span>{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</span></header>
@@ -68,7 +75,7 @@ export function ReviewStage({
           </div>
           <p className="mark-count">{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</p>
           {ocrBlocks.length > 0 && <section className="ocr-evidence" aria-label="Local OCR evidence"><strong>{ocrBlocks.length} text {ocrBlocks.length === 1 ? "region" : "regions"} found locally</strong><ol>{ocrBlocks.map((block) => <li key={block.id}><span>{block.text}</span><small>{block.confidence === null ? "confidence unavailable" : `${Math.round(block.confidence * 100)}% recognition`}</small></li>)}</ol></section>}
-          {candidates.length > 0 && <section className="candidate-list" aria-label="Suggested redactions"><strong>{candidates.length} suggested {candidates.length === 1 ? "redaction" : "redactions"}</strong><ol>{candidates.map((candidate) => <li key={candidate.id}><div><span>{candidate.label}</span><small>{Math.round((candidate.confidence ?? 0) * 100)}% sensitivity</small></div><b>{candidate.evidenceText}</b><p>{candidate.explanation}</p></li>)}</ol></section>}
+          {candidates.length > 0 && <section className="candidate-list" aria-label="Suggested redactions"><strong>{candidates.length} suggested {candidates.length === 1 ? "redaction" : "redactions"}</strong><ol>{candidates.map((candidate) => <li data-status={candidate.status} key={candidate.id}><div><span>{candidate.label}</span><small>{candidate.status === "proposed" ? `${Math.round((candidate.confidence ?? 0) * 100)}% score` : candidate.status}</small></div><b>{candidate.evidenceText}</b><p>{candidate.explanation}</p>{candidate.status === "proposed" && <div className="candidate-actions"><button aria-label={`Accept ${candidate.label} proposal`} onClick={() => onAccept(candidate.id)}>Accept</button><button aria-label={`Reject ${candidate.label} proposal`} onClick={() => onReject(candidate.id)}>Reject</button></div>}</li>)}</ol></section>}
           {marks.length === 0 ? (
             <div className="empty-marks"><strong>Draw on the original</strong><p>Drag over anything private. You can move or resize the region afterward.</p></div>
           ) : (
@@ -92,6 +99,7 @@ export function ReviewStage({
               <button disabled={page.pageNumber === session.pages.length} onClick={() => onSession({ ...session, activePageNumber: page.pageNumber + 1 })}>Next →</button>
             </div>
           )}
+          <section className="audit-strip" aria-label="Audit history"><strong>Recent activity</strong><ol>{session.audit.slice(0, 4).map((entry) => <li key={entry.id}><span>{entry.action}</span><small>{entry.detail}</small></li>)}</ol></section>
         </aside>
       </div>
       <p className="review-note">The safe-share preview is flattened only when you select Done. Your uploaded original remains unchanged.</p>

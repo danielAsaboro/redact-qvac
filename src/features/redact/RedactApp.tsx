@@ -26,6 +26,7 @@ import {
 } from "./safe-copy";
 import {
   addManualMark,
+  acceptCandidate,
   beginPreparation,
   configureSession,
   createSession,
@@ -33,6 +34,7 @@ import {
   moveMark,
   openManualReview,
   recordGeneratedCopy,
+  rejectCandidate,
   removeMark,
   resizeMark,
   type RedactSession,
@@ -242,7 +244,14 @@ export function RedactApp({
     if (!session) return;
     setBusy(true);
     setError(null);
-    const exporting = finishReview(session, { allowUnresolved: true });
+    let exporting: RedactSession;
+    try {
+      exporting = finishReview(session);
+    } catch (caught) {
+      setError(messageOf(caught));
+      setBusy(false);
+      return;
+    }
     setSession(exporting);
     try {
       const copy = await adapters.exportCopy({
@@ -377,6 +386,8 @@ export function RedactApp({
               )
             }
             onRemove={(id) => setSession(removeMark(session, id, adapters.now()))}
+            onAccept={(id) => setSession(acceptCandidate(session, id, adapters.now()))}
+            onReject={(id) => setSession(rejectCandidate(session, id, adapters.now()))}
             onDone={createCopy}
           />
         )}

@@ -96,6 +96,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .review-heading h1 { font-size: clamp(2rem, 3.5vw, 3.5rem); }
 .review-heading > div > p:last-child { margin-bottom: 0; color: var(--muted); }
 .review-actions { display: flex; gap: .65rem; flex-shrink: 0; }
+.review-gate { margin: -.5rem 0 1rem; padding: .7rem .9rem; color: #6f421f; background: #fff5ec; border: 1px solid #efc7a9; border-radius: 7px; font-size: .76rem; font-weight: 700; }
 .review-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 1rem; }
 .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; min-width: 0; }
 .comparison-grid article { min-width: 0; padding: .8rem; background: #e6e4dd; border: 1px solid #c9cec9; border-radius: 12px; }
@@ -137,6 +138,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .candidate-list li > div { display: flex; justify-content: space-between; gap: .5rem; color: var(--orange); font-size: .62rem; text-transform: uppercase; }
 .candidate-list b { display: block; margin-top: .3rem; font-size: .72rem; }
 .candidate-list p { margin: .25rem 0 0; color: var(--muted); font-size: .66rem; line-height: 1.35; }
+.candidate-list li[data-status="accepted"] { border-color: #a9c9b2; background: #eff7f1; }
+.candidate-list li[data-status="rejected"] { opacity: .62; background: #f1f0ec; }
+.candidate-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: .55rem; }
+.candidate-actions button { min-height: 34px; border: 1px solid #b9c3bc; border-radius: 5px; background: white; font-size: .68rem; font-weight: 800; }
+.candidate-actions button:first-child { color: white; background: var(--green-2); border-color: var(--green-2); }
+.audit-strip { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--line); }
+.audit-strip > strong { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; }
+.audit-strip ol { display: grid; gap: .45rem; margin: .55rem 0 0; padding: 0; list-style: none; }
+.audit-strip li { display: grid; gap: .1rem; font-size: .66rem; }
+.audit-strip small { color: var(--muted); }
 .empty-marks { padding: 2rem 1rem; text-align: center; border: 1px dashed #b7beb8; border-radius: 8px; }
 .empty-marks p { color: var(--muted); font-size: .8rem; line-height: 1.5; }
 .editable-marks { display: grid; gap: .8rem; padding: 0; list-style: none; }

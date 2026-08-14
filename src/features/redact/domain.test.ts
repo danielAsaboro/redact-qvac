@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  acceptCandidate,
   addManualMark,
   configureSession,
   createSession,
@@ -8,6 +9,7 @@ import {
   moveMark,
   openManualReview,
   recordGeneratedCopy,
+  rejectCandidate,
   removeMark,
   resizeMark,
   type RasterPage,
@@ -32,6 +34,21 @@ const page: RasterPage = {
   width: 1200,
   height: 1600,
   pngBytes: new Uint8Array([9, 8, 7]).buffer,
+};
+const proposal: RedactionCandidate = {
+  id: "candidate-1",
+  documentId: source.id,
+  pageId: page.id,
+  pageNumber: 1,
+  x: 10,
+  y: 20,
+  width: 30,
+  height: 5,
+  label: "name",
+  evidenceText: "Maya Chen",
+  explanation: "The block contains a person name.",
+  confidence: 0.94,
+  status: "proposed",
 };
 
 function reviewSession() {
@@ -100,22 +117,7 @@ describe("redact workflow domain", () => {
   });
 
   it("blocks completion while suggestions remain unresolved", () => {
-    const candidate: RedactionCandidate = {
-      id: "candidate-1",
-      documentId: source.id,
-      pageId: page.id,
-      pageNumber: 1,
-      x: 10,
-      y: 20,
-      width: 30,
-      height: 5,
-      label: "name",
-      evidenceText: "Amara Okeke",
-      explanation: "Natural-person name",
-      confidence: 0.94,
-      status: "proposed",
-    };
-    const session = { ...reviewSession(), candidates: [candidate] };
+    const session = { ...reviewSession(), candidates: [proposal] };
 
     expect(() => finishReview(session)).toThrow(
       "Resolve every suggestion before creating a safe copy",
@@ -126,6 +128,73 @@ describe("redact workflow domain", () => {
     expect(allowed.audit[0].action).toBe(
       "Finished with unresolved suggestions",
     );
+  });
+
+  it("accepts a proposal once as an ordinary accepted mark and audit event", () => {
+    const session = { ...reviewSession(), candidates: [proposal] };
+    const accepted = acceptCandidate(session, proposal.id, "2026-08-14T10:04:00.000Z");
+    const repeated = acceptCandidate(accepted, proposal.id, "2026-08-14T10:05:00.000Z");
+
+    expect(accepted.candidates[0].status).toBe("accepted");
+    expect(accepted.marks).toEqual([
+      expect.objectContaining({
+        id: `accepted-${proposal.id}`,
+        pageId: page.id,
+        source: "accepted",
+        label: "name",
+        x: 10,
+        y: 20,
+      }),
+    ]);
+    expect(accepted.audit[0]).toMatchObject({
+      action: "Accepted local suggestion",
+      detail: "name · Maya Chen",
+    });
+    expect(repeated).toBe(accepted);
+  });
+
+  it("rejects a proposal without changing manual or accepted marks", () => {
+    const manual = addManualMark(reviewSession(), {
+      id: "manual-1",
+      documentId: source.id,
+      pageId: page.id,
+      pageNumber: 1,
+      x: 1,
+      y: 2,
+      width: 3,
+      height: 4,
+      label: "other",
+      source: "manual",
+      createdAt: "2026-08-14T10:03:00.000Z",
+    });
+    const rejected = rejectCandidate(
+      { ...manual, candidates: [proposal] },
+      proposal.id,
+      "2026-08-14T10:04:00.000Z",
+    );
+
+    expect(rejected.candidates[0].status).toBe("rejected");
+    expect(rejected.marks).toEqual(manual.marks);
+    expect(rejected.audit[0]).toMatchObject({
+      action: "Rejected local suggestion",
+      detail: "name · Maya Chen",
+    });
+  });
+
+  it("treats removing an accepted mark as a resolved rejection", () => {
+    const accepted = acceptCandidate(
+      { ...reviewSession(), candidates: [proposal] },
+      proposal.id,
+      "2026-08-14T10:04:00.000Z",
+    );
+    const removed = removeMark(
+      accepted,
+      `accepted-${proposal.id}`,
+      "2026-08-14T10:05:00.000Z",
+    );
+
+    expect(removed.marks).toEqual([]);
+    expect(removed.candidates[0].status).toBe("rejected");
   });
 
   it("records a generated copy without mutating source identity", () => {

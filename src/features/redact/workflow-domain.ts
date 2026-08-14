@@ -284,15 +284,89 @@ export function removeMark(
 ): RedactSession {
   const mark = session.marks.find((candidate) => candidate.id === markId);
   if (!mark) return session;
+  const acceptedCandidateId = mark.source === "accepted"
+    ? mark.id.replace(/^accepted-/, "")
+    : null;
   return {
     ...session,
     marks: session.marks.filter((candidate) => candidate.id !== markId),
+    candidates: acceptedCandidateId
+      ? session.candidates.map((candidate) =>
+          candidate.id === acceptedCandidateId
+            ? { ...candidate, status: "rejected" }
+            : candidate,
+        )
+      : session.candidates,
     generatedCopy: null,
     audit: [
       {
         id: `audit-remove-${mark.id}-${at}`,
         action: "Removed redaction",
         detail: mark.label,
+        at,
+      },
+      ...session.audit,
+    ],
+  };
+}
+
+export function acceptCandidate(
+  session: RedactSession,
+  candidateId: string,
+  at: string,
+): RedactSession {
+  const candidate = session.candidates.find((item) => item.id === candidateId);
+  if (!candidate || candidate.status !== "proposed") return session;
+  const mark: RedactionMark = {
+    id: `accepted-${candidate.id}`,
+    documentId: candidate.documentId,
+    pageId: candidate.pageId,
+    pageNumber: candidate.pageNumber,
+    x: candidate.x,
+    y: candidate.y,
+    width: candidate.width,
+    height: candidate.height,
+    label: candidate.label,
+    source: "accepted",
+    createdAt: at,
+  };
+  return {
+    ...session,
+    generatedCopy: null,
+    marks: [...session.marks, mark],
+    candidates: session.candidates.map((item) =>
+      item.id === candidateId ? { ...item, status: "accepted" } : item,
+    ),
+    audit: [
+      {
+        id: `audit-accept-${candidate.id}-${at}`,
+        action: "Accepted local suggestion",
+        detail: `${candidate.label} · ${candidate.evidenceText}`,
+        at,
+      },
+      ...session.audit,
+    ],
+  };
+}
+
+export function rejectCandidate(
+  session: RedactSession,
+  candidateId: string,
+  at: string,
+): RedactSession {
+  const candidate = session.candidates.find((item) => item.id === candidateId);
+  if (!candidate || candidate.status !== "proposed") return session;
+  return {
+    ...session,
+    generatedCopy: null,
+    candidates: session.candidates.map((item) =>
+      item.id === candidateId ? { ...item, status: "rejected" } : item,
+    ),
+    audit: [
+      {
+        id: `audit-reject-${candidate.id}-${at}`,
+        action: "Rejected local suggestion",
+        detail: `${candidate.label} · ${candidate.evidenceText}`,
         at,
       },
       ...session.audit,
