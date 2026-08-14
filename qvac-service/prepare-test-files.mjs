@@ -7,8 +7,12 @@ import sharp from "sharp";
 const outputDirectory = fileURLToPath(
   new URL("../public/test-files/redact/", import.meta.url),
 );
+const evaluationDirectory = `${outputDirectory}/evaluation`;
 
-await mkdir(outputDirectory, { recursive: true });
+await Promise.all([
+  mkdir(outputDirectory, { recursive: true }),
+  mkdir(evaluationDirectory, { recursive: true }),
+]);
 
 const chatSvg = Buffer.from(`
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
@@ -33,6 +37,28 @@ await sharp(chatSvg).png().toFile(`${outputDirectory}/chat-private.png`);
 await sharp(chatSvg).jpeg({ quality: 90 }).toFile(
   `${outputDirectory}/chat-private.jpg`,
 );
+
+const clearRaster = await sharp(chatSvg).png().toBuffer();
+await writeFile(`${evaluationDirectory}/chat-clear.png`, clearRaster);
+await sharp(clearRaster).rotate(90).png().toFile(
+  `${evaluationDirectory}/chat-rotated.png`,
+);
+await sharp(clearRaster)
+  .linear(0.24, 188)
+  .png()
+  .toFile(`${evaluationDirectory}/chat-low-contrast.png`);
+await sharp(clearRaster)
+  .composite([
+    {
+      input: Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="230" height="58"><rect width="230" height="58" rx="8" fill="#f4f1ea"/></svg>',
+      ),
+      left: 590,
+      top: 318,
+    },
+  ])
+  .png()
+  .toFile(`${evaluationDirectory}/chat-partially-obscured.png`);
 
 async function createStatement(pageCount) {
   const document = await PDFDocument.create();
@@ -100,6 +126,9 @@ async function createStatement(pageCount) {
 
   document.setTitle("Controlled Redact test statement");
   document.setProducer("Redact controlled-file generator");
+  const fixtureDate = new Date("2026-08-14T00:00:00.000Z");
+  document.setCreationDate(fixtureDate);
+  document.setModificationDate(fixtureDate);
   return document.save({ useObjectStreams: false });
 }
 

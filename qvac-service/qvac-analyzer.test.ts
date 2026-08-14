@@ -84,4 +84,44 @@ describe("QVAC OCR analyzer", () => {
 
     await expect(analyzer.analyzePage(request)).rejects.toThrow();
   });
+
+  it("retries vertically fragmented landscape OCR and maps recovered boxes back", async () => {
+    const qvac = runtime([]);
+    vi.mocked(qvac.ocr)
+      .mockReturnValueOnce({
+        blocks: Promise.resolve([
+          { text: "M", bbox: [100, 100, 110, 170] },
+          { text: "a", bbox: [120, 100, 130, 170] },
+          { text: "y", bbox: [140, 100, 150, 170] },
+          { text: "a", bbox: [160, 100, 170, 170] },
+        ]),
+        stats: Promise.resolve({}),
+      })
+      .mockReturnValueOnce({
+        blocks: Promise.resolve([
+          { text: "Maya Chen", bbox: [200, 100, 400, 150], confidence: 0.9 },
+        ]),
+        stats: Promise.resolve({}),
+      });
+    const analyzer = createQvacOcrAnalyzer({
+      runtime: qvac,
+      modelSource: {},
+      readImageSize: async () => ({ width: 1600, height: 1200 }),
+      rotateImage: async () => Buffer.from("upright"),
+    });
+
+    const response = await analyzer.analyzePage({
+      ...request,
+      width: 1600,
+      height: 1200,
+    });
+
+    expect(qvac.ocr).toHaveBeenCalledTimes(2);
+    expect(qvac.ocr).toHaveBeenLastCalledWith(
+      expect.objectContaining({ image: Buffer.from("upright") }),
+    );
+    expect(response.ocrBlocks).toEqual([
+      { text: "Maya Chen", bbox: [1450, 200, 1500, 400], confidence: 0.9 },
+    ]);
+  });
 });

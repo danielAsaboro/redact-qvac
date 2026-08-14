@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "redact:test-files": "node qvac-service/prepare-test-files.mjs",
     "qvac:ocr-smoke": "node qvac-service/ocr-smoke.mjs",
-    "qvac:service": "tsx qvac-service/index.ts"
+    "qvac:service": "tsx qvac-service/index.ts",
+    "qvac:evaluate": "tsx qvac-service/evaluation-cli.ts"
   },
   "dependencies": {
     "@qvac/sdk": "0.17.1",

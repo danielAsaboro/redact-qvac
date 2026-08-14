@@ -41,6 +41,7 @@ type Options = {
   runtime: QvacOcrRuntime;
   modelSource: unknown;
   readImageSize?: (bytes: Buffer) => Promise<{ width: number; height: number }>;
+  rotateImage?: (bytes: Buffer, angle: 90 | 270) => Promise<Buffer>;
   now?: () => number;
   reasoner?: DocumentReasoner;
 };
@@ -59,6 +60,56 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
       }
       return { width: metadata.width, height: metadata.height };
     });
+  const rotateImage =
+    options.rotateImage ??
+    ((bytes: Buffer, angle: 90 | 270) => sharp(bytes).rotate(angle).png().toBuffer());
+
+  function parseBlocks(unknownBlocks: unknown[]) {
+    return z.array(qvacBlockSchema).parse(unknownBlocks).filter((block) => block.text.trim().length > 0);
+  }
+
+  async function runOcr(loadedModelId: string, image: Buffer) {
+    const operation = options.runtime.ocr({
+      modelId: loadedModelId,
+      image,
+      options: { paragraph: false },
+    });
+    const [unknownBlocks] = await Promise.all([operation.blocks, operation.stats]);
+    return parseBlocks(unknownBlocks);
+  }
+
+  function looksVerticallyFragmented(
+    blocks: Array<z.infer<typeof qvacBlockSchema>>,
+    width: number,
+    height: number,
+  ) {
+    if (width <= height || blocks.length < 4) return false;
+    const vertical = blocks.filter((block) => {
+      const blockWidth = Math.abs(block.bbox[2] - block.bbox[0]);
+      const blockHeight = Math.abs(block.bbox[3] - block.bbox[1]);
+      return blockHeight > blockWidth * 1.5;
+    }).length;
+    return vertical / blocks.length >= 0.6;
+  }
+
+  function recoveredScore(blocks: Array<z.infer<typeof qvacBlockSchema>>) {
+    return blocks.reduce((score, block) => score + (block.text.trim().length >= 3 ? block.text.trim().length : 0), 0);
+  }
+
+  function mapCounterClockwiseRetryToOriginal(
+    blocks: Array<z.infer<typeof qvacBlockSchema>>,
+    originalWidth: number,
+  ) {
+    return blocks.map((block) => ({
+      ...block,
+      bbox: [
+        originalWidth - block.bbox[3],
+        block.bbox[0],
+        originalWidth - block.bbox[1],
+        block.bbox[2],
+      ] as [number, number, number, number],
+    }));
+  }
 
   async function ensureModel() {
     if (modelId) return modelId;
@@ -116,16 +167,14 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
       }
 
       const loadedModelId = await ensureModel();
-      const operation = options.runtime.ocr({
-        modelId: loadedModelId,
-        image: bytes,
-        options: { paragraph: false },
-      });
-      const [unknownBlocks] = await Promise.all([operation.blocks, operation.stats]);
-      const blocks = z
-        .array(qvacBlockSchema)
-        .parse(unknownBlocks)
-        .filter((block) => block.text.trim().length > 0);
+      let blocks = await runOcr(loadedModelId, bytes);
+      if (looksVerticallyFragmented(blocks, input.width, input.height)) {
+        const uprightBytes = await rotateImage(bytes, 270);
+        const recovered = await runOcr(loadedModelId, uprightBytes);
+        if (recoveredScore(recovered) > recoveredScore(blocks)) {
+          blocks = mapCounterClockwiseRetryToOriginal(recovered, input.width);
+        }
+      }
       const ocrCompleted = now();
       const reasoning = options.reasoner
         ? await options.reasoner.classify({
