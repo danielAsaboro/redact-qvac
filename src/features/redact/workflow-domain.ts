@@ -58,6 +58,11 @@ export type RedactionMark = {
   createdAt: string;
 };
 
+export type BoundingBox = Pick<
+  RedactionMark,
+  "x" | "y" | "width" | "height"
+>;
+
 export type CandidateStatus = "proposed" | "accepted" | "rejected";
 
 export type OCRBlock = {
@@ -66,7 +71,8 @@ export type OCRBlock = {
   pageId: string;
   pageNumber: number;
   text: string;
-  bbox: [number, number, number, number];
+  rawBbox: [number, number, number, number];
+  bbox: BoundingBox;
   confidence: number | null;
 };
 

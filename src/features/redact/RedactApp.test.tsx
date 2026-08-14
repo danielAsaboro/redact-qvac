@@ -163,6 +163,12 @@ describe("Redact application", () => {
       undefined,
     );
     expect(screen.getByText("2 text regions found locally")).toBeInTheDocument();
+    expect(screen.getByLabelText("OCR evidence Maya Chen")).toHaveStyle({
+      left: "17.583333%",
+      top: "7.125%",
+      width: "15.5%",
+      height: "2.75%",
+    });
 
     await user.click(screen.getByRole("button", { name: "Add redaction" }));
     expect(screen.getAllByText("1 redaction")).toHaveLength(2);

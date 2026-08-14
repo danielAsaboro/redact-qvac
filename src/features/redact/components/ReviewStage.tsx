@@ -52,8 +52,8 @@ export function ReviewStage({
       <div className="review-layout">
         <div className="comparison-grid">
           <article>
-            <header><strong>Original</strong><span>Drag to draw · drag marks to move</span></header>
-            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} mode="original" onCreate={onAdd} onChange={onGeometry} />
+            <header><strong>Original</strong><span>{ocrBlocks.length > 0 ? `${ocrBlocks.length} detected regions · drag to draw` : "Drag to draw · drag marks to move"}</span></header>
+            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} evidence={ocrBlocks} mode="original" onCreate={onAdd} onChange={onGeometry} />
           </article>
           <article>
             <header><strong>Safe-share preview</strong><span>{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</span></header>

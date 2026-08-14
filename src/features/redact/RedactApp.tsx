@@ -15,6 +15,7 @@ import {
   rasterizeSource,
   type SourceInspection,
 } from "./rasterize";
+import { normalizeOcrBbox } from "./ocr-geometry";
 import {
   copySafeImage,
   generateSafeCopy,
@@ -186,15 +187,21 @@ export function RedactApp({
             ocrMs: result.run.ocrMs,
           });
           ocrBlocks.push(
-            ...result.ocrBlocks.map((block, index) => ({
-              id: `ocr-${page.id}-${index + 1}`,
-              documentId: session.source.id,
-              pageId: page.id,
-              pageNumber: page.pageNumber,
-              text: block.text,
-              bbox: block.bbox,
-              confidence: block.confidence,
-            })),
+            ...result.ocrBlocks.flatMap((block, index) => {
+              const bbox = normalizeOcrBbox(block.bbox, page.width, page.height);
+              return bbox
+                ? [{
+                    id: `ocr-${page.id}-${index + 1}`,
+                    documentId: session.source.id,
+                    pageId: page.id,
+                    pageNumber: page.pageNumber,
+                    text: block.text,
+                    rawBbox: block.bbox,
+                    bbox,
+                    confidence: block.confidence,
+                  }]
+                : [];
+            }),
           );
         }
         setSession(openManualReview(session, pages, { ocrBlocks, analysisRuns }));
