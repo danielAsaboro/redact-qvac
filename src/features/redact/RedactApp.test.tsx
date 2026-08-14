@@ -1,69 +1,200 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { RedactApp } from "./RedactApp";
+import { RedactApp, type RedactAppAdapters } from "./RedactApp";
+import type { RasterPage } from "./workflow-domain";
+
+const page: RasterPage = {
+  id: "page-1",
+  documentId: "document-1",
+  pageNumber: 1,
+  width: 1200,
+  height: 1600,
+  pngBytes: new Uint8Array([137, 80, 78, 71]).buffer,
+};
+
+function adapters(
+  overrides: Partial<RedactAppAdapters> = {},
+): RedactAppAdapters {
+  return {
+    inspect: vi.fn().mockResolvedValue({
+      kind: "image",
+      mimeType: "image/png",
+      pageCount: 1,
+      encrypted: false,
+    }),
+    rasterize: vi.fn().mockResolvedValue([page]),
+    exportCopy: vi.fn().mockResolvedValue({
+      name: "chat-private.redacted.png",
+      mimeType: "image/png",
+      blob: new Blob([new Uint8Array([1, 2, 3])], { type: "image/png" }),
+      pageCount: 1,
+    }),
+    clipboard: {
+      writePng: vi.fn().mockResolvedValue(undefined),
+    },
+    downloader: { save: vi.fn() },
+    digest: vi.fn().mockResolvedValue("sha256-source"),
+    now: () => "2026-08-14T10:00:00.000Z",
+    ...overrides,
+  };
+}
 
 describe("Redact application", () => {
-  beforeEach(() => localStorage.clear());
-
-  it("presents an intake tray and honest redaction workspace", async () => {
-    render(<RedactApp />);
-
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Redact" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("navigation", { name: "Intake tray" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("3 marks placed")).toBeInTheDocument();
-    expect(screen.getByText(/visual review workspace/i)).toBeInTheDocument();
+  beforeEach(() => {
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => "blob:local-page"),
+      revokeObjectURL: vi.fn(),
+    });
   });
 
-  it("adds, removes, and persists manual marks", async () => {
-    const user = userEvent.setup();
-    const view = render(<RedactApp />);
-    await screen.findByRole("heading", { name: "Redact" });
+  it("starts with a focused upload screen and no prototype language", () => {
+    render(<RedactApp adapters={adapters()} />);
 
-    await user.click(screen.getByRole("button", { name: "Add manual mark" }));
-    expect(screen.getByText("4 marks placed")).toBeInTheDocument();
-
-    view.unmount();
-    render(<RedactApp />);
-    expect(await screen.findByText("4 marks placed")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /Remove other mark/ }));
-    expect(screen.getByText("3 marks placed")).toBeInTheDocument();
-  });
-
-  it("labels preview and export limitations clearly", async () => {
-    const user = userEvent.setup();
-    render(<RedactApp />);
-    await screen.findByRole("heading", { name: "Redact" });
-
-    await user.click(
-      screen.getByRole("button", { name: "Safe-share preview" }),
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "What do you need to share safely?",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Choose a document")).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /demo|fixture|dossier|simulated export|reset demo/i,
     );
-    expect(
-      screen.getByText(/does not securely rewrite the source file/i),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Record simulated export" }),
-    );
-    expect(screen.getByText("Simulation recorded")).toBeInTheDocument();
   });
 
-  it("resets the dossier to deterministic demo data", async () => {
+  it("accepts an image and configures privacy before preparation", async () => {
     const user = userEvent.setup();
-    render(<RedactApp />);
-    await screen.findByRole("heading", { name: "Redact" });
-    await user.click(screen.getByRole("button", { name: "Add manual mark" }));
+    const appAdapters = adapters();
+    render(<RedactApp adapters={appAdapters} />);
 
-    await user.click(screen.getByRole("button", { name: "Reset demo data" }));
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1, 2, 3])], "chat-private.png", {
+        type: "image/png",
+      }),
+    );
 
+    expect(await screen.findByText("Privacy level")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Private/i })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /Confidential/i })).toBeEnabled();
+    expect(screen.getByLabelText("Additional direction")).toHaveAttribute(
+      "maxlength",
+      "500",
+    );
+    expect(screen.getByText(/original stays untouched/i)).toBeInTheDocument();
+  });
+
+  it("rejects unsupported uploads without leaving the upload stage", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    render(<RedactApp adapters={adapters()} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1])], "records.xlsx", {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+    );
+
+    expect(
+      await screen.findByText("Choose a PNG, JPEG, or PDF file"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "What do you need to share safely?" }),
+    ).toBeInTheDocument();
+  });
+
+  it("prepares, reviews, edits, and creates a real safe copy", async () => {
+    const user = userEvent.setup();
+    const appAdapters = adapters();
+    render(<RedactApp adapters={appAdapters} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1, 2, 3])], "chat-private.png", {
+        type: "image/png",
+      }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("radio", { name: /Confidential/i }));
+    await user.type(
+      screen.getByLabelText("Additional direction"),
+      "Hide Apollo references",
+    );
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+
+    expect(await screen.findByText("Original")).toBeInTheDocument();
+    expect(screen.getByText("Safe-share preview")).toBeInTheDocument();
+    expect(appAdapters.rasterize).toHaveBeenCalledOnce();
+
+    await user.click(screen.getByRole("button", { name: "Add redaction" }));
+    expect(screen.getAllByText("1 redaction")).toHaveLength(2);
+    const width = screen.getByLabelText("Redaction width");
+    await user.clear(width);
+    await user.type(width, "35");
+    expect(width).toHaveValue(35);
+
+    await user.click(screen.getByRole("button", { name: "Done" }));
+    expect(
+      await screen.findByRole("heading", { name: "Your safe copy is ready" }),
+    ).toBeInTheDocument();
+    expect(appAdapters.exportCopy).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Copy to clipboard" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save copy" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Save copy" }));
+    expect(appAdapters.downloader.save).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the generated copy available when clipboard access fails", async () => {
+    const user = userEvent.setup();
+    const appAdapters = adapters({
+      clipboard: {
+        writePng: vi.fn().mockRejectedValue(new Error("NotAllowedError")),
+      },
+    });
+    render(<RedactApp adapters={appAdapters} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1])], "chat-private.png", {
+        type: "image/png",
+      }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+    await screen.findByText("Safe-share preview");
+    await user.click(screen.getByRole("button", { name: "Done" }));
+    await screen.findByRole("heading", { name: "Your safe copy is ready" });
+    await user.click(screen.getByRole("button", { name: "Copy to clipboard" }));
+
+    expect(
+      await screen.findByText("Clipboard unavailable — save the copy instead"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save copy" })).toBeEnabled();
+  });
+
+  it("reports preparation failures without losing the chosen document", async () => {
+    const user = userEvent.setup();
+    const appAdapters = adapters({
+      rasterize: vi.fn().mockRejectedValue(new Error("This PDF could not be read")),
+    });
+    render(<RedactApp adapters={appAdapters} />);
+
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1])], "statement.pdf", {
+        type: "application/pdf",
+      }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+
+    expect(await screen.findByText("This PDF could not be read")).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.getByText("3 marks placed")).toBeInTheDocument(),
+      expect(screen.getByText(/statement\.pdf/)).toBeInTheDocument(),
     );
+    expect(screen.getByRole("button", { name: "Try again" })).toBeEnabled();
   });
 });

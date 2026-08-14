@@ -25,6 +25,7 @@
 # misc
 .DS_Store
 *.pem
+/.qvac/
 
 # debug
 npm-debug.log*

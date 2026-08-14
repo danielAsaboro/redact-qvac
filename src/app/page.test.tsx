@@ -4,11 +4,15 @@ import { describe, expect, it } from "vitest";
 import Home from "./page";
 
 describe("Redact home", () => {
-  it("introduces Redact by name", () => {
+  it("opens the real document upload workflow", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Redact" }),
+      screen.getByRole("heading", {
+        level: 1,
+        name: "What do you need to share safely?",
+      }),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Choose a document")).toBeInTheDocument();
   });
 });

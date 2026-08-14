@@ -1,0 +1,319 @@
+export type WorkflowStage =
+  | "configure"
+  | "analyzing"
+  | "review"
+  | "exporting"
+  | "complete";
+
+export type ConfidentialityLevel = "private" | "confidential";
+
+export type SupportedSourceMimeType =
+  | "image/png"
+  | "image/jpeg"
+  | "application/pdf";
+
+export type SourceDocument = {
+  id: string;
+  name: string;
+  mimeType: SupportedSourceMimeType;
+  byteSize: number;
+  pageCount: number;
+  originalBytes: ArrayBuffer;
+  originalDigest: string;
+};
+
+export type RasterPage = {
+  id: string;
+  documentId: string;
+  pageNumber: number;
+  width: number;
+  height: number;
+  pngBytes: ArrayBuffer;
+};
+
+export type RedactionLabel =
+  | "name"
+  | "email"
+  | "phone"
+  | "address"
+  | "account"
+  | "identity"
+  | "amount"
+  | "date"
+  | "reference"
+  | "business"
+  | "other";
+
+export type RedactionMark = {
+  id: string;
+  documentId: string;
+  pageId: string;
+  pageNumber: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label: RedactionLabel;
+  source: "manual" | "accepted";
+  createdAt: string;
+};
+
+export type CandidateStatus = "proposed" | "accepted" | "rejected";
+
+export type RedactionCandidate = {
+  id: string;
+  documentId: string;
+  pageId: string;
+  pageNumber: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label: RedactionLabel;
+  evidenceText: string;
+  explanation: string;
+  confidence: number | null;
+  status: CandidateStatus;
+};
+
+export type AnalysisRun = {
+  id: string;
+  documentId: string;
+  revision: number;
+  status: "loading" | "analyzing" | "ready" | "unavailable" | "error";
+  startedAt: string;
+  completedAt: string | null;
+  error: string | null;
+};
+
+export type AuditEntry = {
+  id: string;
+  action: string;
+  detail: string;
+  at: string;
+};
+
+export type GeneratedCopyRecord = {
+  name: string;
+  mimeType: "image/png" | "application/pdf";
+  pageCount: number;
+  byteSize: number;
+  createdAt: string;
+};
+
+export type RedactSession = {
+  id: string;
+  stage: WorkflowStage;
+  source: SourceDocument;
+  pages: RasterPage[];
+  activePageNumber: number;
+  configuration: {
+    level: ConfidentialityLevel;
+    direction: string;
+  };
+  analysisRevision: number;
+  lastAnalyzedRevision: number | null;
+  marks: RedactionMark[];
+  candidates: RedactionCandidate[];
+  analysisRuns: AnalysisRun[];
+  audit: AuditEntry[];
+  generatedCopy: GeneratedCopyRecord | null;
+};
+
+export function createSession(source: SourceDocument, at: string): RedactSession {
+  return {
+    id: `session-${source.id}`,
+    stage: "configure",
+    source,
+    pages: [],
+    activePageNumber: 1,
+    configuration: { level: "private", direction: "" },
+    analysisRevision: 0,
+    lastAnalyzedRevision: null,
+    marks: [],
+    candidates: [],
+    analysisRuns: [],
+    audit: [
+      {
+        id: `audit-upload-${source.id}-${at}`,
+        action: "Added document",
+        detail: source.name,
+        at,
+      },
+    ],
+    generatedCopy: null,
+  };
+}
+
+export function configureSession(
+  session: RedactSession,
+  configuration: RedactSession["configuration"],
+): RedactSession {
+  if (
+    session.configuration.level === configuration.level &&
+    session.configuration.direction === configuration.direction
+  ) {
+    return session;
+  }
+  return {
+    ...session,
+    stage: "configure",
+    configuration,
+    analysisRevision: session.analysisRevision + 1,
+    lastAnalyzedRevision: null,
+    candidates: session.candidates.filter(
+      (candidate) => candidate.status !== "proposed",
+    ),
+    generatedCopy: null,
+  };
+}
+
+export function beginPreparation(session: RedactSession): RedactSession {
+  return { ...session, stage: "analyzing", generatedCopy: null };
+}
+
+export function openManualReview(
+  session: RedactSession,
+  pages: RasterPage[],
+): RedactSession {
+  if (pages.length === 0) throw new Error("At least one page is required");
+  return {
+    ...session,
+    stage: "review",
+    pages,
+    activePageNumber: 1,
+    generatedCopy: null,
+  };
+}
+
+export function addManualMark(
+  session: RedactSession,
+  mark: RedactionMark,
+): RedactSession {
+  return {
+    ...session,
+    marks: [...session.marks, mark],
+    generatedCopy: null,
+    audit: [
+      {
+        id: `audit-add-${mark.id}`,
+        action: "Added redaction",
+        detail: mark.label,
+        at: mark.createdAt,
+      },
+      ...session.audit,
+    ],
+  };
+}
+
+export function moveMark(
+  session: RedactSession,
+  markId: string,
+  position: Pick<RedactionMark, "x" | "y">,
+): RedactSession {
+  return {
+    ...session,
+    generatedCopy: null,
+    marks: session.marks.map((mark) =>
+      mark.id === markId
+        ? {
+            ...mark,
+            x: Math.max(0, Math.min(100 - mark.width, position.x)),
+            y: Math.max(0, Math.min(100 - mark.height, position.y)),
+          }
+        : mark,
+    ),
+  };
+}
+
+export function resizeMark(
+  session: RedactSession,
+  markId: string,
+  size: Pick<RedactionMark, "width" | "height">,
+): RedactSession {
+  return {
+    ...session,
+    generatedCopy: null,
+    marks: session.marks.map((mark) =>
+      mark.id === markId
+        ? {
+            ...mark,
+            width: Math.max(0.5, Math.min(100 - mark.x, size.width)),
+            height: Math.max(0.5, Math.min(100 - mark.y, size.height)),
+          }
+        : mark,
+    ),
+  };
+}
+
+export function removeMark(
+  session: RedactSession,
+  markId: string,
+  at: string,
+): RedactSession {
+  const mark = session.marks.find((candidate) => candidate.id === markId);
+  if (!mark) return session;
+  return {
+    ...session,
+    marks: session.marks.filter((candidate) => candidate.id !== markId),
+    generatedCopy: null,
+    audit: [
+      {
+        id: `audit-remove-${mark.id}-${at}`,
+        action: "Removed redaction",
+        detail: mark.label,
+        at,
+      },
+      ...session.audit,
+    ],
+  };
+}
+
+export function finishReview(
+  session: RedactSession,
+  options: { allowUnresolved?: boolean } = {},
+): RedactSession {
+  const unresolved = session.candidates.filter(
+    (candidate) => candidate.status === "proposed",
+  );
+  if (unresolved.length > 0 && !options.allowUnresolved) {
+    throw new Error("Resolve every suggestion before creating a safe copy");
+  }
+  const at = new Date().toISOString();
+  return {
+    ...session,
+    stage: "exporting",
+    audit:
+      unresolved.length > 0
+        ? [
+            {
+              id: `audit-unresolved-${session.id}-${at}`,
+              action: "Finished with unresolved suggestions",
+              detail: `${unresolved.length} suggestions remained unresolved`,
+              at,
+            },
+            ...session.audit,
+          ]
+        : session.audit,
+  };
+}
+
+export function recordGeneratedCopy(
+  session: RedactSession,
+  generatedCopy: GeneratedCopyRecord,
+): RedactSession {
+  return {
+    ...session,
+    stage: "complete",
+    generatedCopy,
+    audit: [
+      {
+        id: `audit-copy-${session.id}-${generatedCopy.createdAt}`,
+        action: "Created safe copy",
+        detail: generatedCopy.name,
+        at: generatedCopy.createdAt,
+      },
+      ...session.audit,
+    ],
+  };
+}
