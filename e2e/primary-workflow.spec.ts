@@ -23,27 +23,45 @@ test("uploads an image, reviews a manual mask, and saves flattened pixels", asyn
   const canvas = page.getByLabel("Redaction canvas");
   const canvasBox = await canvas.boundingBox();
   expect(canvasBox).not.toBeNull();
-  await page.mouse.move(
-    canvasBox!.x + canvasBox!.width * 0.16,
-    canvasBox!.y + canvasBox!.height * 0.23,
-  );
-  await page.mouse.down();
-  await page.mouse.move(
-    canvasBox!.x + canvasBox!.width * 0.51,
-    canvasBox!.y + canvasBox!.height * 0.31,
-    { steps: 4 },
-  );
-  await page.mouse.up();
+  const start = {
+    clientX: canvasBox!.x + canvasBox!.width * 0.16,
+    clientY: canvasBox!.y + canvasBox!.height * 0.23,
+  };
+  const end = {
+    clientX: canvasBox!.x + canvasBox!.width * 0.51,
+    clientY: canvasBox!.y + canvasBox!.height * 0.31,
+  };
+  if (testInfo.project.name === "mobile") {
+    await canvas.dispatchEvent("pointerdown", { ...start, button: 0, pointerId: 1, pointerType: "touch" });
+    await canvas.dispatchEvent("pointermove", { ...end, button: 0, pointerId: 1, pointerType: "touch" });
+    await canvas.dispatchEvent("pointerup", { ...end, button: 0, pointerId: 1, pointerType: "touch" });
+  } else {
+    await page.mouse.move(start.clientX, start.clientY);
+    await page.mouse.down();
+    await page.mouse.move(end.clientX, end.clientY, { steps: 4 });
+    await page.mouse.up();
+  }
   await expect(page.getByText("1 redaction").first()).toBeVisible();
   const resizeHandle = page.getByRole("button", {
     name: "Resize redaction 1 southeast",
   });
   const handleBox = await resizeHandle.boundingBox();
   expect(handleBox).not.toBeNull();
-  await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(handleBox!.x + 18, handleBox!.y + 12, { steps: 3 });
-  await page.mouse.up();
+  const handleStart = {
+    clientX: handleBox!.x + handleBox!.width / 2,
+    clientY: handleBox!.y + handleBox!.height / 2,
+  };
+  const handleEnd = { clientX: handleBox!.x + 18, clientY: handleBox!.y + 12 };
+  if (testInfo.project.name === "mobile") {
+    await resizeHandle.dispatchEvent("pointerdown", { ...handleStart, button: 0, pointerId: 2, pointerType: "touch" });
+    await canvas.dispatchEvent("pointermove", { ...handleEnd, button: 0, pointerId: 2, pointerType: "touch" });
+    await canvas.dispatchEvent("pointerup", { ...handleEnd, button: 0, pointerId: 2, pointerType: "touch" });
+  } else {
+    await page.mouse.move(handleStart.clientX, handleStart.clientY);
+    await page.mouse.down();
+    await page.mouse.move(handleEnd.clientX, handleEnd.clientY, { steps: 3 });
+    await page.mouse.up();
+  }
 
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { name: "Your safe copy is ready" })).toBeVisible();
