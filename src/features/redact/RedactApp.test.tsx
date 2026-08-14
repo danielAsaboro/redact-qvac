@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -145,6 +145,34 @@ describe("Redact application", () => {
 
     await user.click(screen.getByRole("button", { name: "Save copy" }));
     expect(appAdapters.downloader.save).toHaveBeenCalledOnce();
+  });
+
+  it("keeps moved geometry when a mark is dragged on the document", async () => {
+    const user = userEvent.setup();
+    render(<RedactApp adapters={adapters()} />);
+    await user.upload(
+      screen.getByLabelText("Choose a document"),
+      new File([new Uint8Array([1, 2, 3])], "chat-private.png", {
+        type: "image/png",
+      }),
+    );
+    await screen.findByText("Privacy level");
+    await user.click(screen.getByRole("button", { name: "Prepare for review" }));
+    await screen.findByText("Safe-share preview");
+    await user.click(screen.getByRole("button", { name: "Add redaction" }));
+
+    const surface = screen.getByLabelText("Redaction canvas");
+    vi.spyOn(surface, "getBoundingClientRect").mockReturnValue({
+      x: 0, y: 0, left: 0, top: 0, right: 200, bottom: 100,
+      width: 200, height: 100, toJSON: () => ({}),
+    });
+    const region = screen.getByRole("button", { name: "Move redaction 1" });
+    fireEvent.pointerDown(region, { pointerId: 1, clientX: 40, clientY: 25 });
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 60, clientY: 35 });
+    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 60, clientY: 35 });
+
+    expect(screen.getByLabelText("Redaction horizontal position")).toHaveValue(26);
+    expect(screen.getByLabelText("Redaction vertical position")).toHaveValue(33);
   });
 
   it("keeps the generated copy available when clipboard access fails", async () => {

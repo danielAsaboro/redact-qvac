@@ -9,8 +9,8 @@ a PNG, JPEG, or PDF while leaving the original file unchanged.
 2. Choose **Private** or **Confidential** and optionally describe what else to
    protect.
 3. Redact rasterizes the file locally into review pages.
-4. Compare the original with the safe-share preview, add and edit manual marks,
-   and inspect the audit history.
+4. Draw directly on the original, drag marks to reposition them, resize from
+   corner handles, compare the safe-share preview, and inspect the audit history.
 5. Save the flattened copy or copy a single-page PNG to the clipboard.
 
 This `main` checkpoint is the complete non-AI product. The course branch adds

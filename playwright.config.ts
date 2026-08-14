@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   reporter: "line",
   use: {
-    baseURL: "http://localhost:3101",
+    baseURL: process.env.REDACT_BASE_URL ?? "http://localhost:3101",
     trace: "retain-on-failure",
   },
   projects: [

@@ -1,14 +1,34 @@
-import { DocumentSurface } from "./DocumentSurface";
-import type { RedactSession } from "../workflow-domain";
+import { useState } from "react";
 
-export function ReviewStage({ session, busy, error, onSession, onAdd, onMove, onResize, onRemove, onDone }: {
+import {
+  DocumentSurface,
+  type RedactionGeometry,
+} from "./DocumentSurface";
+import type {
+  RedactionMark,
+  RedactSession,
+} from "../workflow-domain";
+
+export function ReviewStage({
+  session,
+  busy,
+  error,
+  onSession,
+  onAdd,
+  onMove,
+  onResize,
+  onGeometry,
+  onRemove,
+  onDone,
+}: {
   session: RedactSession;
   busy: boolean;
   error: string | null;
   onSession(session: RedactSession): void;
-  onAdd(): void;
+  onAdd(geometry?: RedactionGeometry): void;
   onMove(id: string, x: number, y: number): void;
   onResize(id: string, width: number, height: number): void;
+  onGeometry(id: string, geometry: RedactionGeometry): void;
   onRemove(id: string): void;
   onDone(): void;
 }) {
@@ -16,21 +36,106 @@ export function ReviewStage({ session, busy, error, onSession, onAdd, onMove, on
   const marks = session.marks.filter((mark) => mark.pageId === page.id);
   return (
     <section className="review-stage">
-      <div className="review-heading"><div><p className="stage-kicker">Human review</p><h1>Check every covered region</h1><p>{session.source.name} · Page {page.pageNumber} of {session.pages.length}</p></div><div className="review-actions"><button className="secondary-button" onClick={() => onSession({ ...session, stage: "configure" })}>Change settings</button><button aria-label="Done" className="primary-button" disabled={busy} onClick={onDone}>{busy ? "Creating…" : "Done"} <span>→</span></button></div></div>
+      <div className="review-heading">
+        <div>
+          <p className="stage-kicker">Human review</p>
+          <h1>Check every covered region</h1>
+          <p>{session.source.name} · Page {page.pageNumber} of {session.pages.length}</p>
+        </div>
+        <div className="review-actions">
+          <button className="secondary-button" onClick={() => onSession({ ...session, stage: "configure" })}>Change settings</button>
+          <button aria-label="Done" className="primary-button" disabled={busy} onClick={onDone}>{busy ? "Creating…" : "Done"} <span>→</span></button>
+        </div>
+      </div>
       {error && <p className="error-banner" role="alert">{error}</p>}
       <div className="review-layout">
         <div className="comparison-grid">
-          <article><header><strong>Original</strong><span>Source view</span></header><DocumentSurface key={`original-${page.id}`} page={page} marks={marks} mode="original" /></article>
-          <article><header><strong>Safe-share preview</strong><span>{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</span></header><DocumentSurface key={`safe-${page.id}`} page={page} marks={marks} mode="safe" /></article>
+          <article>
+            <header><strong>Original</strong><span>Drag to draw · drag marks to move</span></header>
+            <DocumentSurface key={`original-${page.id}`} page={page} marks={marks} mode="original" onCreate={onAdd} onChange={onGeometry} />
+          </article>
+          <article>
+            <header><strong>Safe-share preview</strong><span>{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</span></header>
+            <DocumentSurface key={`safe-${page.id}`} page={page} marks={marks} mode="safe" />
+          </article>
         </div>
         <aside className="mark-panel">
-          <div className="mark-panel-title"><div><p className="stage-kicker">Page {page.pageNumber}</p><h2>Redactions</h2></div><button aria-label="Add redaction" className="add-button" onClick={onAdd}>＋ Add redaction</button></div>
+          <div className="mark-panel-title">
+            <div><p className="stage-kicker">Page {page.pageNumber}</p><h2>Redactions</h2></div>
+            <button aria-label="Add redaction" className="add-button" onClick={() => onAdd()}>＋ Add redaction</button>
+          </div>
           <p className="mark-count">{marks.length} {marks.length === 1 ? "redaction" : "redactions"}</p>
-          {marks.length === 0 ? <div className="empty-marks"><strong>No regions covered yet</strong><p>Add a redaction and adjust its position and size.</p></div> : <ol className="editable-marks">{marks.map((mark, index) => <li key={mark.id}><div className="mark-row"><span>{index + 1}</span><strong>{mark.label === "other" ? "Manual redaction" : mark.label}</strong><button aria-label={`Remove redaction ${index + 1}`} onClick={() => onRemove(mark.id)}>Remove</button></div><div className="geometry-grid"><label>X<input aria-label="Redaction horizontal position" type="number" min="0" max="100" defaultValue={mark.x} onChange={(event) => event.target.value && onMove(mark.id, Number(event.target.value), mark.y)} /></label><label>Y<input aria-label="Redaction vertical position" type="number" min="0" max="100" defaultValue={mark.y} onChange={(event) => event.target.value && onMove(mark.id, mark.x, Number(event.target.value))} /></label><label>Width<input aria-label="Redaction width" type="number" min="0.5" max="100" defaultValue={mark.width} onChange={(event) => event.target.value && onResize(mark.id, Number(event.target.value), mark.height)} /></label><label>Height<input aria-label="Redaction height" type="number" min="0.5" max="100" defaultValue={mark.height} onChange={(event) => event.target.value && onResize(mark.id, mark.width, Number(event.target.value))} /></label></div></li>)}</ol>}
-          {session.pages.length > 1 && <div className="page-controls"><button disabled={page.pageNumber === 1} onClick={() => onSession({ ...session, activePageNumber: page.pageNumber - 1 })}>← Previous</button><span>{page.pageNumber} / {session.pages.length}</span><button disabled={page.pageNumber === session.pages.length} onClick={() => onSession({ ...session, activePageNumber: page.pageNumber + 1 })}>Next →</button></div>}
+          {marks.length === 0 ? (
+            <div className="empty-marks"><strong>Draw on the original</strong><p>Drag over anything private. You can move or resize the region afterward.</p></div>
+          ) : (
+            <ol className="editable-marks">
+              {marks.map((mark, index) => (
+                <li key={mark.id}>
+                  <div className="mark-row">
+                    <span>{index + 1}</span>
+                    <strong>{mark.label === "other" ? "Manual redaction" : mark.label}</strong>
+                    <button aria-label={`Remove redaction ${index + 1}`} onClick={() => onRemove(mark.id)}>Remove</button>
+                  </div>
+                  <PrecisionControls mark={mark} onMove={onMove} onResize={onResize} />
+                </li>
+              ))}
+            </ol>
+          )}
+          {session.pages.length > 1 && (
+            <div className="page-controls">
+              <button disabled={page.pageNumber === 1} onClick={() => onSession({ ...session, activePageNumber: page.pageNumber - 1 })}>← Previous</button>
+              <span>{page.pageNumber} / {session.pages.length}</span>
+              <button disabled={page.pageNumber === session.pages.length} onClick={() => onSession({ ...session, activePageNumber: page.pageNumber + 1 })}>Next →</button>
+            </div>
+          )}
         </aside>
       </div>
       <p className="review-note">The safe-share preview is flattened only when you select Done. Your uploaded original remains unchanged.</p>
     </section>
+  );
+}
+
+function PrecisionControls({
+  mark,
+  onMove,
+  onResize,
+}: {
+  mark: RedactionMark;
+  onMove(id: string, x: number, y: number): void;
+  onResize(id: string, width: number, height: number): void;
+}) {
+  return (
+    <details className="precision-controls">
+      <summary>Precise positioning</summary>
+      <div className="geometry-grid">
+        <label>X<PrecisionNumberInput label="Redaction horizontal position" min={0} value={mark.x} onCommit={(value) => onMove(mark.id, value, mark.y)} /></label>
+        <label>Y<PrecisionNumberInput label="Redaction vertical position" min={0} value={mark.y} onCommit={(value) => onMove(mark.id, mark.x, value)} /></label>
+        <label>Width<PrecisionNumberInput label="Redaction width" min={0.5} value={mark.width} onCommit={(value) => onResize(mark.id, value, mark.height)} /></label>
+        <label>Height<PrecisionNumberInput label="Redaction height" min={0.5} value={mark.height} onCommit={(value) => onResize(mark.id, mark.width, value)} /></label>
+      </div>
+    </details>
+  );
+}
+
+function PrecisionNumberInput({ label, min, value, onCommit }: {
+  label: string;
+  min: number;
+  value: number;
+  onCommit(value: number): void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      aria-label={label}
+      max={100}
+      min={min}
+      onBlur={() => setDraft(null)}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        if (event.target.value !== "") onCommit(Number(event.target.value));
+      }}
+      type="number"
+      value={draft ?? String(value)}
+    />
   );
 }

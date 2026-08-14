@@ -103,11 +103,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .comparison-grid article > header strong { font-family: Georgia, serif; }
 .comparison-grid article > header span { color: var(--muted); font-size: .7rem; }
 .document-surface { position: relative; width: 100%; overflow: hidden; background: white; box-shadow: 0 10px 35px rgba(20,32,25,.15); }
-.document-surface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.document-surface[data-interactive="true"] { cursor: crosshair; touch-action: none; user-select: none; }
+.document-surface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .surface-mark { position: absolute; z-index: 2; min-width: 2px; min-height: 2px; }
 .surface-mark[data-mode="original"] { background: rgba(233,101,61,.18); border: 2px solid var(--orange); }
+.surface-mark[data-mode="original"] { cursor: grab; touch-action: none; }
+.surface-mark[data-mode="original"]:active { cursor: grabbing; }
+.surface-mark[data-mode="original"]:focus-visible { outline: 3px solid #fff; box-shadow: 0 0 0 5px var(--green); }
 .surface-mark[data-mode="original"] span { position: absolute; top: -1.4rem; left: -2px; padding: .18rem .35rem; color: #fff; background: var(--orange); font-size: .55rem; text-transform: uppercase; }
 .surface-mark[data-mode="safe"] { background: #050505; }
+.drawing-mark { z-index: 3; background: rgba(40,104,78,.18); border: 2px dashed var(--green); pointer-events: none; }
+.resize-handle { position: absolute; z-index: 4; width: 14px; height: 14px; padding: 0; background: #fff; border: 2px solid var(--orange); border-radius: 50%; }
+.resize-handle[data-corner="northwest"] { top: -8px; left: -8px; cursor: nwse-resize; }
+.resize-handle[data-corner="northeast"] { top: -8px; right: -8px; cursor: nesw-resize; }
+.resize-handle[data-corner="southwest"] { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.resize-handle[data-corner="southeast"] { right: -8px; bottom: -8px; cursor: nwse-resize; }
 .mark-panel { padding: 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
 .mark-panel-title { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding-bottom: .9rem; border-bottom: 1px solid var(--line); }
 .mark-panel-title h2 { margin: 0; font-family: Georgia, serif; }
@@ -120,6 +130,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .mark-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .5rem; }
 .mark-row > span { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; color: white; background: var(--orange); border-radius: 50%; font-size: .7rem; }
 .mark-row > button { padding: 0; color: var(--error); background: none; border: 0; font-size: .68rem; }
+.precision-controls { margin-top: .55rem; }
+.precision-controls summary { color: var(--muted); cursor: pointer; font-size: .68rem; }
 .geometry-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; margin-top: .65rem; }
 .geometry-grid label { display: grid; gap: .2rem; color: var(--muted); font-size: .58rem; text-transform: uppercase; }
 .geometry-grid input { min-width: 0; width: 100%; padding: .35rem; border: 1px solid #c9cec9; border-radius: 4px; }

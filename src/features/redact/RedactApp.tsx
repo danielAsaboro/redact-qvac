@@ -256,7 +256,7 @@ export function RedactApp({
             busy={busy}
             error={error}
             onSession={setSession}
-            onAdd={() => {
+            onAdd={(geometry) => {
               const page = session.pages[session.activePageNumber - 1];
               const index = session.marks.length + 1;
               setSession(
@@ -265,10 +265,10 @@ export function RedactApp({
                   documentId: session.source.id,
                   pageId: page.id,
                   pageNumber: page.pageNumber,
-                  x: Math.min(68, 12 + index * 4),
-                  y: Math.min(72, 18 + index * 5),
-                  width: 24,
-                  height: 6,
+                  x: geometry?.x ?? Math.min(68, 12 + index * 4),
+                  y: geometry?.y ?? Math.min(72, 18 + index * 5),
+                  width: geometry?.width ?? 24,
+                  height: geometry?.height ?? 6,
                   label: "other",
                   source: "manual",
                   createdAt: adapters.now(),
@@ -278,6 +278,15 @@ export function RedactApp({
             onMove={(id, x, y) => setSession(moveMark(session, id, { x, y }))}
             onResize={(id, width, height) =>
               setSession(resizeMark(session, id, { width, height }))
+            }
+            onGeometry={(id, geometry) =>
+              setSession(
+                resizeMark(
+                  moveMark(session, id, { x: geometry.x, y: geometry.y }),
+                  id,
+                  { width: geometry.width, height: geometry.height },
+                ),
+              )
             }
             onRemove={(id) => setSession(removeMark(session, id, adapters.now()))}
             onDone={createCopy}

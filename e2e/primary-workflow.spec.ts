@@ -20,12 +20,30 @@ test("uploads an image, reviews a manual mask, and saves flattened pixels", asyn
   await page.getByRole("button", { name: "Prepare for review" }).click();
 
   await expect(page.getByText("Safe-share preview", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Add redaction" }).click();
-  await page.getByLabel("Redaction horizontal position").fill("16");
-  await page.getByLabel("Redaction vertical position").fill("23");
-  await page.getByLabel("Redaction width").fill("35");
-  await page.getByLabel("Redaction height").fill("8");
+  const canvas = page.getByLabel("Redaction canvas");
+  const canvasBox = await canvas.boundingBox();
+  expect(canvasBox).not.toBeNull();
+  await page.mouse.move(
+    canvasBox!.x + canvasBox!.width * 0.16,
+    canvasBox!.y + canvasBox!.height * 0.23,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    canvasBox!.x + canvasBox!.width * 0.51,
+    canvasBox!.y + canvasBox!.height * 0.31,
+    { steps: 4 },
+  );
+  await page.mouse.up();
   await expect(page.getByText("1 redaction").first()).toBeVisible();
+  const resizeHandle = page.getByRole("button", {
+    name: "Resize redaction 1 southeast",
+  });
+  const handleBox = await resizeHandle.boundingBox();
+  expect(handleBox).not.toBeNull();
+  await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handleBox!.x + 18, handleBox!.y + 12, { steps: 3 });
+  await page.mouse.up();
 
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { name: "Your safe copy is ready" })).toBeVisible();
