@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { assertWarmedCache, withRemoteFetchBlocked } from "./offline-proof";
+import { assertWarmedCache, assertRemoteNetworkingDenied, withRemoteFetchBlocked } from "./offline-proof";
 
 describe("offline ownership proof", () => {
   it("requires both OCR assets and the reasoning model", () => {
@@ -36,5 +36,22 @@ describe("offline ownership proof", () => {
       }),
     ).rejects.toThrow("analysis failed");
     expect(globalThis.fetch).toBe(original);
+  });
+});
+
+// A DNS failure or unreachable host is not evidence of an OS sandbox.
+describe("OS networking evidence", () => {
+  it.each(["ENOTFOUND", "ETIMEDOUT", "ECONNREFUSED"])("rejects inconclusive %s failures", async (code) => {
+    await expect(assertRemoteNetworkingDenied(async () => {
+      throw Object.assign(new Error("connection failed"), { code });
+    })).rejects.toThrow("permission denial");
+  });
+  it("rejects a successful remote connection", async () => {
+    await expect(assertRemoteNetworkingDenied(async () => {})).rejects.toThrow("not blocked");
+  });
+  it.each(["EPERM", "EACCES"])("accepts OS permission denial %s", async (code) => {
+    await expect(assertRemoteNetworkingDenied(async () => {
+      throw Object.assign(new Error("denied"), { code });
+    })).resolves.toBeUndefined();
   });
 });

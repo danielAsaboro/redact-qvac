@@ -7,6 +7,7 @@ import sharp from "sharp";
 const testFiles = path.join(process.cwd(), "public/test-files/redact");
 
 test.beforeEach(async ({ page }) => {
+  await page.route("http://127.0.0.1:4317/**", (route) => route.abort());
   await page.goto("/");
 });
 
@@ -66,7 +67,7 @@ test("uploads an image, reviews a manual mask, and saves flattened pixels", asyn
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { name: "Your safe copy is ready" })).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Save copy" }).click();
+  await page.getByRole("link", { name: "Save copy" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("chat-private.redacted.png");
   const downloadPath = await download.path();
@@ -98,7 +99,7 @@ test("rasterizes a multi-page PDF and saves a two-page image-only PDF", async ({
   await page.getByRole("button", { name: "Done" }).click();
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Save copy" }).click();
+  await page.getByRole("link", { name: "Save copy" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("statement-multipage.redacted.pdf");
   const savedPath = await download.path();

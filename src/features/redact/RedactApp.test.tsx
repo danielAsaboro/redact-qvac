@@ -198,10 +198,10 @@ describe("Redact application", () => {
     ).toBeInTheDocument();
     expect(appAdapters.exportCopy).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "Copy to clipboard" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Save copy" })).toBeEnabled();
+    expect(screen.getByText("Save copy")).toBeEnabled();
 
-    await user.click(screen.getByRole("button", { name: "Save copy" }));
-    expect(appAdapters.downloader.save).toHaveBeenCalledOnce();
+    expect(screen.getByRole("link", { name: "Save copy" })).toHaveAttribute("download", "chat-private.redacted.png");
+    expect(screen.getByRole("link", { name: "Save copy" }).getAttribute("href")).toMatch(/^blob:/);
   });
 
   it("keeps moved geometry when a mark is dragged on the document", async () => {
@@ -342,7 +342,7 @@ describe("Redact application", () => {
     expect(
       await screen.findByText("Clipboard unavailable — save the copy instead"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save copy" })).toBeEnabled();
+    expect(screen.getByText("Save copy")).toBeEnabled();
   });
 
   it("reports preparation failures without losing the chosen document", async () => {
@@ -367,4 +367,51 @@ describe("Redact application", () => {
     );
     expect(screen.getByRole("button", { name: "Try again" })).toBeEnabled();
   });
+});
+
+it("shows progress while a large safe PDF is being generated", async () => {
+  const user = userEvent.setup();
+  const appAdapters = adapters({exportCopy: () => new Promise(() => {})});
+  render(<RedactApp adapters={appAdapters} />);
+  await user.upload(screen.getByLabelText("Choose a document"), new File([new Uint8Array([1])], "sample.png", {type:"image/png"}));
+  await user.click(await screen.findByRole("button", {name:"Prepare for review"}));
+  await user.click(await screen.findByRole("button", {name:"Reject name proposal"}));
+  await user.click(screen.getByRole("button", {name:"Reject email proposal"}));
+  await user.click(screen.getByRole("button", {name:"Done"}));
+  expect(screen.getByRole("status")).toHaveTextContent("Creating your safe copy");
+});
+
+it("keeps masks independent after deleting and adding a region", async () => {
+  const user = userEvent.setup();
+  render(<RedactApp adapters={adapters()} />);
+  await user.upload(screen.getByLabelText("Choose a document"), new File([new Uint8Array([1])], "sample.png", {type:"image/png"}));
+  await user.click(await screen.findByRole("button", {name:"Prepare for review"}));
+  await screen.findByText("Original");
+  await user.click(screen.getByRole("button", {name:"Add redaction"}));
+  await user.click(screen.getByRole("button", {name:"Add redaction"}));
+  await user.click(screen.getByRole("button", {name:"Remove redaction 1"}));
+  await user.click(screen.getByRole("button", {name:"Add redaction"}));
+  const first = screen.getByRole("button", {name:"Move redaction 1"});
+  const originalStyle = first.getAttribute("style");
+  fireEvent.keyDown(screen.getByRole("button", {name:"Move redaction 2"}), {key:"ArrowRight"});
+  expect(first.getAttribute("style")).toBe(originalStyle);
+});
+
+it("keeps the opposite corner fixed during a fast northwest resize", async () => {
+  const user = userEvent.setup();
+  render(<RedactApp adapters={adapters()} />);
+  await user.upload(screen.getByLabelText("Choose a document"), new File([new Uint8Array([1])], "sample.png", {type:"image/png"}));
+  await user.click(await screen.findByRole("button", {name:"Prepare for review"}));
+  await screen.findByText("Original");
+  await user.click(screen.getByRole("button", {name:"Add redaction"}));
+  fireEvent.change(screen.getByLabelText("Redaction horizontal position"), {target:{value:"10"}});
+  fireEvent.change(screen.getByLabelText("Redaction vertical position"), {target:{value:"10"}});
+  fireEvent.change(screen.getByLabelText("Redaction width"), {target:{value:"80"}});
+  fireEvent.change(screen.getByLabelText("Redaction height"), {target:{value:"30"}});
+  const surface = screen.getByLabelText("Redaction canvas");
+  vi.spyOn(surface,"getBoundingClientRect").mockReturnValue({x:0,y:0,left:0,top:0,right:200,bottom:100,width:200,height:100,toJSON:()=>({})});
+  fireEvent.pointerDown(screen.getByRole("button",{name:"Resize redaction 1 northwest"}),{pointerId:3,clientX:20,clientY:10});
+  fireEvent.pointerMove(surface,{pointerId:3,clientX:160,clientY:20});
+  fireEvent.pointerUp(surface,{pointerId:3,clientX:160,clientY:20});
+  expect(screen.getByRole("button",{name:"Move redaction 1"})).toHaveStyle({left:"80%",top:"20%",width:"10%",height:"20%"});
 });

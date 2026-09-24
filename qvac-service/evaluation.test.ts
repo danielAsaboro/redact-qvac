@@ -20,10 +20,10 @@ const expected: LabelledRegion[] = [
 describe("labelled QVAC evaluation", () => {
   it("pins the tested runtime and gate configuration", () => {
     expect(EVALUATION_IDENTIFIERS).toMatchObject({
-      sdk: "@qvac/sdk@0.17.1",
+      sdk: "@qvac/sdk@0.20.0",
       ocr: "OCR_LATIN/qvac-ocr-latin",
       reasoning: "QWEN3_600M_INST_Q4/qwen3-600m-instruct-q4",
-      policy: "redact-sensitive-fields-v2",
+      policy: "redact-sensitive-fields-v3",
     });
     expect(EVALUATION_THRESHOLDS).toEqual({
       iou: 0.45,

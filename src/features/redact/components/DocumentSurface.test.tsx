@@ -128,3 +128,12 @@ describe("direct redaction manipulation", () => {
     });
   });
 });
+
+it("previews the same outward-rounded pixels used by the flattened mask", () => {
+  const { container } = render(<DocumentSurface page={page} marks={[{...mark,x:10.04,y:20.04,width:0.01,height:0.01}]} mode="safe" />);
+  const mask = container.querySelector('[data-mode="safe"]') as HTMLElement;
+  expect(parseFloat(mask.style.left)).toBeCloseTo(10,6);
+  expect(parseFloat(mask.style.top)).toBeCloseTo(20,6);
+  expect(parseFloat(mask.style.width)).toBeCloseTo(100/1200,6);
+  expect(parseFloat(mask.style.height)).toBeCloseTo(100/1600,6);
+});

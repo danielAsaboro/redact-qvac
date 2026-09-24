@@ -64,6 +64,13 @@ function mark(pageNumber = 1): RedactionMark {
 }
 
 describe("flattened safe copies", () => {
+  it("preserves physical PDF page size when OCR raster resolution is higher", async () => {
+    const raster = { ...page(1), width: 1224, height: 1584, pdfWidth: 612, pdfHeight: 792 };
+    const copy = await generateSafeCopy({ source: source("application/pdf"), pages: [raster], marks: [], canvas: { flatten: async () => onePixelPng } });
+    const output = await PDFDocument.load(await copy.blob.arrayBuffer());
+    expect(output.getPage(0).getSize()).toEqual({ width: 612, height: 792 });
+  });
+
   it("maps percentage marks to an opaque pixel rectangle", () => {
     expect(markToPixelRect(mark(), { width: 100, height: 100 })).toEqual({
       x: 10,

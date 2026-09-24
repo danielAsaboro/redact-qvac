@@ -78,3 +78,30 @@ describe("structured local sensitivity reasoning", () => {
     await expect(reasoner.classify({ documentId: "document-1", level: "private", direction: "", blocks })).resolves.toMatchObject({ candidates: [] });
   });
 });
+
+// Model omissions must not hide explicit identifiers already present in OCR.
+it("retains explicit identifiers even when the model returns no candidates", async () => {
+  const reasoner = createStructuredReasoner({ runtime: runtimeFor('{"candidates":[]}'), modelSource: {} });
+  const texts = ["Account holder: Amina Yusuf", "Account number: 1234 5678", "amina@example.com", "Reference", "54,820.00", "2026-08-03", "CASE-9876"];
+  const evidence = texts.map(text => ({text, bbox: [0,0,100,20] as [number,number,number,number], confidence: 0.9}));
+  const privateResult = await reasoner.classify({documentId:"statement",level:"private",direction:"",blocks:evidence});
+  expect(privateResult.candidates.map(c => [c.blockIndex,c.label])).toEqual([[0,"name"],[1,"account"],[2,"email"]]);
+  const confidential = await reasoner.classify({documentId:"statement",level:"confidential",direction:"",blocks:evidence});
+  expect(confidential.candidates.map(c => [c.blockIndex,c.label])).toEqual([[0,"name"],[1,"account"],[2,"email"],[4,"amount"],[5,"date"],[6,"reference"]]);
+});
+
+it("batches dense OCR without dropping blocks or losing original indices", async () => {
+  const runtime = runtimeFor('{"candidates":[]}');
+  const seen: string[] = [];
+  runtime.completion = vi.fn((options) => {
+    const payload = JSON.parse(options.history[1].content);
+    if (new TextEncoder().encode(JSON.stringify(payload.blocks)).length > 2200 || payload.blocks.length > 8) throw new Error("Context overflow");
+    seen.push(...payload.blocks.map((b: {text: string}) => b.text));
+    return { events: (async function* () {})(), final: Promise.resolve({ contentText: JSON.stringify({ candidates: payload.blocks.map((b: {blockIndex: number}) => ({ blockIndex: b.blockIndex, label: "name", explanation: "Personal name", confidence: 0.9 })) }) }) };
+  });
+  const evidence = Array.from({length: 40}, () => ({ ...blocks[0] }));
+  const reasoner = createStructuredReasoner({runtime,modelSource:{}});
+  const result = await reasoner.classify({documentId:"dense",level:"private",direction:"",blocks:evidence});
+  expect(seen).toEqual(evidence.map(b => b.text));
+  expect(result.candidates.map(c => c.blockIndex)).toEqual(Array.from({length:40},(_,i)=>i));
+});

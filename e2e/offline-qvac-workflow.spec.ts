@@ -39,6 +39,10 @@ test("runs cached QVAC, human review, audit, and safe-copy export", async ({ pag
   await expect(page.getByLabel("Suggested redactions")).toBeVisible({
     timeout: 190_000,
   });
+  await page.screenshot({
+    fullPage: true,
+    path: path.join(process.cwd(), "submission/evidence/ai-output.png"),
+  });
   await page.getByRole("button", { name: "Accept name proposal" }).click();
   await expect(page.getByText("Accepted local suggestion").first()).toBeVisible();
   await page.getByRole("button", { name: "Reject email proposal" }).click();
@@ -51,11 +55,12 @@ test("runs cached QVAC, human review, audit, and safe-copy export", async ({ pag
   await page.getByRole("button", { name: "Done" }).click();
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Save copy" }).click();
+  await page.getByRole("link", { name: "Save copy" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("chat-private.redacted.png");
   const savedPath = await download.path();
   expect(savedPath).not.toBeNull();
+  await download.saveAs(testInfo.outputPath("reviewed-test-output.png"));
   const acceptedNamePixel = await sharp(savedPath!)
     .extract({ left: 250, top: 130, width: 1, height: 1 })
     .removeAlpha()

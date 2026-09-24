@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   inspectSource,
+  pdfRasterDimensions,
   rasterizeSource,
   scaleWithinLongEdge,
   validatePdfInspection,
@@ -20,6 +21,15 @@ function pngPage(pageNumber: number) {
 }
 
 describe("local source rasterization", () => {
+  it("returns whole-pixel dimensions for fractional PDF page boxes", () => {
+    expect(scaleWithinLongEdge({ width: 595.28, height: 841.89 }, 2400)).toEqual({ width: 595, height: 842 });
+  });
+
+  it("renders PDF text at 144 DPI while bounding large page rasters", () => {
+    expect(pdfRasterDimensions({ width: 612, height: 792 }, 2400)).toEqual({ width: 1224, height: 1584 });
+    expect(pdfRasterDimensions({ width: 2000, height: 3000 }, 2400)).toEqual({ width: 1600, height: 2400 });
+  });
+
   it("scales landscape and portrait pages within the configured long edge", () => {
     expect(scaleWithinLongEdge({ width: 4800, height: 3200 }, 2400)).toEqual({
       width: 2400,
