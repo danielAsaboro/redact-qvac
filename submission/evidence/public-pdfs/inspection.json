@@ -1,0 +1,220 @@
+[
+  {
+    "file": "irs-w9.pdf",
+    "pages": [
+      {
+        "page": 1,
+        "width": 611.976,
+        "height": 791.968,
+        "rotation": 0,
+        "textItems": 252,
+        "imageOps": 0,
+        "annotations": 23
+      },
+      {
+        "page": 2,
+        "width": 611.976,
+        "height": 791.968,
+        "rotation": 0,
+        "textItems": 279,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 3,
+        "width": 611.976,
+        "height": 791.968,
+        "rotation": 0,
+        "textItems": 264,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 4,
+        "width": 611.976,
+        "height": 791.968,
+        "rotation": 0,
+        "textItems": 268,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 5,
+        "width": 611.976,
+        "height": 791.968,
+        "rotation": 0,
+        "textItems": 268,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 6,
+        "width": 611.976,
+        "height": 791.968,
+        "rotation": 0,
+        "textItems": 91,
+        "imageOps": 0,
+        "annotations": 0
+      }
+    ]
+  },
+  {
+    "file": "mozilla-paper.pdf",
+    "pages": [
+      {
+        "page": 1,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 182,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 2,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 214,
+        "imageOps": 10,
+        "annotations": 0
+      },
+      {
+        "page": 3,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 191,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 4,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 260,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 5,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 194,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 6,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 241,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 7,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 240,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 8,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 311,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 9,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 156,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 10,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 238,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 11,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 165,
+        "imageOps": 78,
+        "annotations": 0
+      },
+      {
+        "page": 12,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 592,
+        "imageOps": 0,
+        "annotations": 0
+      },
+      {
+        "page": 13,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 169,
+        "imageOps": 2,
+        "annotations": 0
+      },
+      {
+        "page": 14,
+        "width": 612,
+        "height": 792,
+        "rotation": 0,
+        "textItems": 129,
+        "imageOps": 0,
+        "annotations": 0
+      }
+    ]
+  },
+  {
+    "file": "ricoh-excellent.pdf",
+    "pages": [
+      {
+        "page": 1,
+        "width": 839.88,
+        "height": 595.44,
+        "rotation": 0,
+        "textItems": 0,
+        "imageOps": 1,
+        "annotations": 0
+      }
+    ]
+  },
+  {
+    "file": "ricoh-normal.pdf",
+    "pages": [
+      {
+        "page": 1,
+        "width": 840,
+        "height": 595.2,
+        "rotation": 0,
+        "textItems": 0,
+        "imageOps": 1,
+        "annotations": 0
+      }
+    ]
+  }
+]

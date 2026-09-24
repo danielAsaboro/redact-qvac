@@ -1,0 +1,27 @@
+# QVAC bounty submission copy — review draft
+
+## One or two lines for Whop
+
+Redact uses `@qvac/sdk` 0.20.0 with `loadModel`, `ocr`, and `completion` to find likely sensitive details locally in images and PDFs. People review each suggestion, add or adjust masks, and export a separate flattened copy; manual editing works when analysis is unavailable.
+
+## Optional why-I-built-it line
+
+I wanted a practical way to check private details before sharing a document while keeping inference and the original file on my machine.
+
+## X post draft
+
+> Built Redact with @qvac: local OCR + reasoning suggest private details in images and PDFs. Review each mark, fix misses, export a separate flattened copy. @qvac/sdk 0.20.0: loadModel, ocr, completion.
+>
+> Repo: [PUBLIC_GITHUB_REPO_URL]
+
+Attach [ai-output.png](evidence/ai-output.png) to the X post. The image shows real local model output on a fictional fixture. Replace the repository placeholder with the verified public URL before posting; do not publish this draft with a placeholder. The draft is 252 characters with the planned `https://github.com/danielAsaboro/redact-qvac` URL.
+
+## Exact Whop entry values to stage after publication
+
+- **Public GitHub repository URL:** `[PUBLIC_GITHUB_REPO_URL]`
+- **X post URL:** `[PUBLISHED_X_POST_URL]`
+- **Description:** Use the two-line copy above.
+- **Visual proof:** Upload [ai-output.png](evidence/ai-output.png). It shows 12 locally found text regions and six suggestions.
+- **Optional reason:** Use the line above only if the form offers the field.
+
+The [evidence manifest](evidence/manifest.md) supports the local-product claims. This draft does not claim guaranteed detection or a publicly available release yet.

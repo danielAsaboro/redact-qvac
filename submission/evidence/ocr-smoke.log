@@ -1,0 +1,152 @@
+
+> redact@0.1.0 qvac:ocr-smoke
+> node qvac-service/ocr-smoke.mjs
+
+[QVACRegistryClient] [INFO] Downloading blob directly {
+  coreKey: 'd90c02630333...',
+  blockOffset: 2108162,
+  blockLength: 1269,
+  byteLength: 83133856
+}
+[QVACRegistryClient] [INFO] Downloading blob directly {
+  coreKey: 'd90c02630333...',
+  blockOffset: 2109431,
+  blockLength: 235,
+  byteLength: 15396512
+}
+[QVACRegistryClient] [INFO] Cleared blob blocks from corestore { start: 2109431, end: 2109666, blocks: 0 }
+[QVACRegistryClient] [INFO] Blob download complete (direct)
+[QVACRegistryClient] [INFO] Cleared blob blocks from corestore { start: 2108162, end: 2109431, blocks: 0 }
+[QVACRegistryClient] [INFO] Blob download complete (direct)
+{
+  "sourceName": "chat-private.png",
+  "sourceDigest": "6c19d1f974f4a66aad5823d3ec6bc8d5f2b37e7cd1e62bc3cfe1cc651a1e2521",
+  "cacheDirectory": "/Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact/.qvac/models",
+  "blocks": [
+    {
+      "text": "Maya Chen",
+      "bbox": [
+        211,
+        114,
+        397,
+        158
+      ],
+      "confidence": 0.9312501549720764
+    },
+    {
+      "text": "maya.chen@example com",
+      "bbox": [
+        213,
+        166,
+        478,
+        194
+      ],
+      "confidence": 0.46382951736450195
+    },
+    {
+      "text": "Please send the contract to 18 Willow Road.",
+      "bbox": [
+        187,
+        334,
+        719,
+        365
+      ],
+      "confidence": 0.8148847818374634
+    },
+    {
+      "text": "My",
+      "bbox": [
+        183.75588989257812,
+        376.5438537597656,
+        234.39393615722656,
+        417.6959228515625
+      ],
+      "confidence": 0.9997366070747375
+    },
+    {
+      "text": "phone is +1 415 555 0184.",
+      "bbox": [
+        230,
+        380,
+        554,
+        414
+      ],
+      "confidence": 0.6811761856079102
+    },
+    {
+      "text": "Got it.",
+      "bbox": [
+        378,
+        546,
+        452,
+        574
+      ],
+      "confidence": 0.981999397277832
+    },
+    {
+      "text": "will use account 8841 0932",
+      "bbox": [
+        472,
+        546,
+        803,
+        578
+      ],
+      "confidence": 0.6070454120635986
+    },
+    {
+      "text": "and reference APOLLO-4471",
+      "bbox": [
+        376,
+        590,
+        736,
+        621
+      ],
+      "confidence": 0.6928746104240417
+    },
+    {
+      "text": "Thanks",
+      "bbox": [
+        186,
+        765,
+        282,
+        795
+      ],
+      "confidence": 0.9999936819076538
+    },
+    {
+      "text": "keep the amount confidential.",
+      "bbox": [
+        314,
+        764,
+        676,
+        801
+      ],
+      "confidence": 0.9703466296195984
+    },
+    {
+      "text": "Controlled test document",
+      "bbox": [
+        118,
+        1440,
+        370,
+        1464
+      ],
+      "confidence": 0.85226970911026
+    },
+    {
+      "text": "no real personal information",
+      "bbox": [
+        382,
+        1440,
+        660,
+        1469
+      ],
+      "confidence": 0.9930748343467712
+    }
+  ],
+  "stats": {
+    "detectionTime": 24.128531917,
+    "recognitionTime": 1.131415375,
+    "totalTime": 25.362928084
+  }
+}

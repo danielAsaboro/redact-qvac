@@ -1,0 +1,49 @@
+{
+  "method": "Shared generateSafeCopy; Poppler raster input and Sharp mask adapter, separate from browser download verification",
+  "results": [
+    {
+      "file": "ricoh-normal.pdf",
+      "pages": 1,
+      "textItems": 0,
+      "annotations": 0,
+      "physicalSizePreserved": true,
+      "allPageMasksOpaque": true,
+      "sourceUnchanged": true,
+      "outputPath": "/Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact/.qvac/public-pdf-tests/ricoh-normal/ricoh-normal.redacted.pdf",
+      "outputBytes": 1980488
+    },
+    {
+      "file": "ricoh-excellent.pdf",
+      "pages": 1,
+      "textItems": 0,
+      "annotations": 0,
+      "physicalSizePreserved": true,
+      "allPageMasksOpaque": true,
+      "sourceUnchanged": true,
+      "outputPath": "/Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact/.qvac/public-pdf-tests/ricoh-excellent/ricoh-excellent.redacted.pdf",
+      "outputBytes": 2623910
+    },
+    {
+      "file": "mozilla-paper.pdf",
+      "pages": 14,
+      "textItems": 0,
+      "annotations": 0,
+      "physicalSizePreserved": true,
+      "allPageMasksOpaque": true,
+      "sourceUnchanged": true,
+      "outputPath": "/Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact/.qvac/public-pdf-tests/mozilla-paper/mozilla-paper.redacted.pdf",
+      "outputBytes": 5731821
+    },
+    {
+      "file": "irs-w9.pdf",
+      "pages": 6,
+      "textItems": 0,
+      "annotations": 0,
+      "physicalSizePreserved": true,
+      "allPageMasksOpaque": true,
+      "sourceUnchanged": true,
+      "outputPath": "/Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact/.qvac/public-pdf-tests/irs-w9/irs-w9.redacted.pdf",
+      "outputBytes": 2494636
+    }
+  ]
+}

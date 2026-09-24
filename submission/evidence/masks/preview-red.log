@@ -1,0 +1,29 @@
+
+> redact@0.1.0 test
+> vitest run src/features/redact/components/DocumentSurface.test.tsx
+
+
+ RUN  v4.1.11 /Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact
+
+ ❯ src/features/redact/components/DocumentSurface.test.tsx (4 tests | 1 failed) 90ms
+   × previews the same outward-rounded pixels used by the flattened mask 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/redact/components/DocumentSurface.test.tsx > previews the same outward-rounded pixels used by the flattened mask
+AssertionError: expected 10.04 to be close to 10, received difference is 0.03999999999999915, but expected 5e-7
+ ❯ src/features/redact/components/DocumentSurface.test.tsx:135:39
+    133|   const { container } = render(<DocumentSurface page={page} marks={[{.…
+    134|   const mask = container.querySelector('[data-mode="safe"]') as HTMLEl…
+    135|   expect(parseFloat(mask.style.left)).toBeCloseTo(10,6);
+       |                                       ^
+    136|   expect(parseFloat(mask.style.top)).toBeCloseTo(20,6);
+    137|   expect(parseFloat(mask.style.width)).toBeCloseTo(100/1200,6);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  18:06:50
+   Duration  611ms (transform 29ms, setup 72ms, import 21ms, tests 90ms, environment 340ms)

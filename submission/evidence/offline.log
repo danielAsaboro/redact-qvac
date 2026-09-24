@@ -1,0 +1,31 @@
+
+> redact@0.1.0 qvac:offline
+> sandbox-exec -p '(version 1) (allow default) (deny network-outbound (require-all (require-any (remote tcp "*:*") (remote udp "*:*")) (require-not (remote ip "localhost:*"))))' node_modules/.bin/tsx qvac-service/offline-cli.ts
+
+{
+  "mode": "macos-process-network-denied",
+  "osNetworkDenied": true,
+  "sourceSha256": "6c19d1f974f4a66aad5823d3ec6bc8d5f2b37e7cd1e62bc3cfe1cc651a1e2521",
+  "ocrBlocks": 12,
+  "suggestions": 6,
+  "labels": [
+    "name",
+    "email",
+    "address",
+    "phone",
+    "account",
+    "reference"
+  ],
+  "run": {
+    "id": "analysis-offline-chat-private-offline-page-1-1790093953654",
+    "documentId": "offline-chat-private",
+    "status": "ready",
+    "startedAt": "2026-09-22T16:19:13.654Z",
+    "completedAt": "2026-09-22T16:19:45.490Z",
+    "ocrModel": "qvac-ocr-latin",
+    "ocrMs": 23833,
+    "reasoningModel": "qwen3-600m-instruct-q4",
+    "reasoningMs": 8003,
+    "error": null
+  }
+}

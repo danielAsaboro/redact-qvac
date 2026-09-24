@@ -1,0 +1,66 @@
+
+> redact@0.1.0 test
+> vitest run src/features/redact/RedactApp.test.tsx
+
+
+ RUN  v4.1.11 /Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact
+
+stderr | src/features/redact/RedactApp.test.tsx > keeps masks independent after deleting and adding a region
+Encountered two children with the same key, `manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `audit-add-manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+stderr | src/features/redact/RedactApp.test.tsx > keeps masks independent after deleting and adding a region
+Encountered two children with the same key, `manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `audit-add-manual-2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+ ❯ src/features/redact/RedactApp.test.tsx (13 tests | 2 failed) 900ms
+   × keeps masks independent after deleting and adding a region 114ms
+   × keeps the opposite corner fixed during a fast northwest resize 71ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/redact/RedactApp.test.tsx > keeps masks independent after deleting and adding a region
+AssertionError: expected 'left: 20.5%; top: 28%; width: 24%; he…' to be 'left: 20%; top: 28%; width: 24%; heig…' // Object.is equality
+
+Expected: "left: 20%; top: 28%; width: 24%; height: 6%;"
+Received: "left: 20.5%; top: 28%; width: 24%; height: 6%;"
+
+ ❯ src/features/redact/RedactApp.test.tsx:397:39
+    395|   const originalStyle = first.getAttribute("style");
+    396|   fireEvent.keyDown(screen.getByRole("button", {name:"Move redaction 2…
+    397|   expect(first.getAttribute("style")).toBe(originalStyle);
+       |                                       ^
+    398| });
+    399|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/redact/RedactApp.test.tsx > keeps the opposite corner fixed during a fast northwest resize
+Error: expect(element).toHaveStyle()
+
+- Expected
+
+  height: 20%;
+- left: 80%;
++ left: 20%;
+  top: 20%;
+  width: 10%;
+ ❯ src/features/redact/RedactApp.test.tsx:416:64
+    414|   fireEvent.pointerMove(surface,{pointerId:3,clientX:160,clientY:20});
+    415|   fireEvent.pointerUp(surface,{pointerId:3,clientX:160,clientY:20});
+    416|   expect(screen.getByRole("button",{name:"Move redaction 1"})).toHaveS…
+       |                                                                ^
+    417| });
+    418|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 passed (13)
+   Start at  18:06:17
+   Duration  1.81s (transform 97ms, setup 103ms, import 216ms, tests 900ms, environment 488ms)

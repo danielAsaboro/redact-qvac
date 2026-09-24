@@ -1,0 +1,40 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import safeCopy from '../src/features/redact/safe-copy.ts';
+const { generateSafeCopy, markToPixelRect } = safeCopy;
+const root=path.resolve('.qvac/public-pdf-tests');
+const results=[];
+for (const name of ['ricoh-normal.pdf','ricoh-excellent.pdf','mozilla-paper.pdf','irs-w9.pdf']) {
+ const file=path.join(root,name), bytes=await fs.readFile(file), digest=createHash('sha256').update(bytes).digest('hex');
+ const dir=path.join(root,name.replace('.pdf','')); await fs.mkdir(dir,{recursive:true});
+ execFileSync('pdftoppm',['-r','144','-png',file,path.join(dir,'source')],{timeout:120000});
+ const task=getDocument({data:new Uint8Array(bytes),useSystemFonts:true});const doc=await task.promise;
+ const rasterFiles=(await fs.readdir(dir)).filter(x=>/^source-\d+\.png$/.test(x)).sort((a,b)=>Number(a.match(/\d+/)![0])-Number(b.match(/\d+/)![0]));
+ const pages=[];const marks=[];
+ for(let i=0;i<doc.numPages;i++) {
+  const png=await fs.readFile(path.join(dir,rasterFiles[i]));const meta=await sharp(png).metadata();const original=(await doc.getPage(i+1)).getViewport({scale:1});
+  pages.push({id:`page-${i+1}`,documentId:name,pageNumber:i+1,width:meta.width!,height:meta.height!,pdfWidth:original.width,pdfHeight:original.height,pngBytes:new Uint8Array(png).buffer});
+  marks.push({id:`mark-${i+1}`,documentId:name,pageId:`page-${i+1}`,pageNumber:i+1,x:10,y:10,width:24,height:6,label:'other' as const,source:'manual' as const,createdAt:new Date().toISOString()});
+ }
+ const output=await generateSafeCopy({source:{id:name,name,mimeType:'application/pdf',byteSize:bytes.length,pageCount:pages.length,originalBytes:new Uint8Array(bytes).buffer,originalDigest:digest},pages,marks,canvas:{async flatten(page, marks){
+  const overlays=marks.map(mark=>{const r=markToPixelRect(mark,page);return {input:Buffer.from(`<svg width="${r.width}" height="${r.height}"><rect width="100%" height="100%" fill="black"/></svg>`),left:r.x,top:r.y};});
+  return new Uint8Array(await sharp(Buffer.from(page.pngBytes)).composite(overlays).png().toBuffer());
+ }}});
+ const outputPath=path.join(dir,output.name);await fs.writeFile(outputPath,new Uint8Array(await output.blob.arrayBuffer()));
+ const checkTask=getDocument({data:new Uint8Array(await fs.readFile(outputPath)),useSystemFonts:true});const check=await checkTask.promise;
+ let textItems=0,annotations=0;
+ if(check.numPages!==pages.length)throw Error('Page count changed');
+ for(let i=0;i<check.numPages;i++){const p=await check.getPage(i+1);textItems+=(await p.getTextContent()).items.length;annotations+=(await p.getAnnotations()).length;const v=p.getViewport({scale:1});if(Math.abs(v.width-pages[i].pdfWidth)>0.01||Math.abs(v.height-pages[i].pdfHeight)>0.01)throw Error('Physical page size changed');}
+ if(textItems||annotations)throw Error('Recoverable text or annotations remain');
+ if(createHash('sha256').update(await fs.readFile(file)).digest('hex')!==digest)throw Error('Source modified');
+ execFileSync('pdftoppm',['-r','144','-png',outputPath,path.join(dir,'output')],{timeout:120000});
+ const outputRasters=(await fs.readdir(dir)).filter(x=>/^output-\d+\.png$/.test(x));
+ for(const raster of outputRasters){const file=path.join(dir,raster), meta=await sharp(file).metadata();const pixel=await sharp(file).extract({left:Math.floor(meta.width!*.2),top:Math.floor(meta.height!*.13),width:1,height:1}).removeAlpha().raw().toBuffer();if(!pixel.every(x=>x===0))throw Error('Mask is not opaque black');}
+ results.push({file:name,pages:check.numPages,textItems,annotations,physicalSizePreserved:true,allPageMasksOpaque:true,sourceUnchanged:true,outputPath,outputBytes:output.blob.size});
+ await checkTask.destroy();await task.destroy();console.log(JSON.stringify(results.at(-1)));
+}
+await fs.writeFile(path.join(root,'export-validation.json'),JSON.stringify({method:'Shared generateSafeCopy; Poppler raster input and Sharp mask adapter, separate from browser download verification',results},null,2));

@@ -1,0 +1,13 @@
+
+> redact@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.11 /Users/MAC/.codex/worktrees/redact-qvac-release/apps/redact
+
+Redact QVAC analyze-page failed: OCR is not connected at this checkpoint
+
+ Test Files  16 passed (16)
+      Tests  103 passed (103)
+   Start at  18:07:47
+   Duration  2.70s (transform 969ms, setup 2.21s, import 1.92s, tests 1.90s, environment 9.64s)

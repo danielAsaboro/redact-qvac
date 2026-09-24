@@ -1,0 +1,487 @@
+
+> redact@0.1.0 qvac:evaluate
+> tsx qvac-service/evaluation-cli.ts
+
+Evaluating clear…
+Evaluating rotated…
+Evaluating low-contrast…
+Evaluating partially-obscured…
+{
+  "mode": "real-cached-local-qvac",
+  "identifiers": {
+    "sdk": "@qvac/sdk@0.20.0",
+    "ocr": "OCR_LATIN/qvac-ocr-latin",
+    "reasoning": "QWEN3_600M_INST_Q4/qwen3-600m-instruct-q4",
+    "policy": "redact-sensitive-fields-v3"
+  },
+  "passed": true,
+  "modelLoadMs": {
+    "ocr": 1622,
+    "reasoning": 1536
+  },
+  "timings": [
+    {
+      "caseId": "chat-clear",
+      "ocrInferenceMs": 20862,
+      "reasoningInferenceMs": 6115
+    },
+    {
+      "caseId": "chat-rotated",
+      "ocrInferenceMs": 62925,
+      "reasoningInferenceMs": 5642
+    },
+    {
+      "caseId": "chat-low-contrast",
+      "ocrInferenceMs": 26465,
+      "reasoningInferenceMs": 4832
+    },
+    {
+      "caseId": "chat-partially-obscured",
+      "ocrInferenceMs": 23199,
+      "reasoningInferenceMs": 7082
+    }
+  ],
+  "memory": {
+    "peakRssBytes": 257376256,
+    "peakHeapUsedBytes": 72634272
+  },
+  "results": [
+    {
+      "caseId": "chat-clear",
+      "proposals": [
+        {
+          "id": "chat-clear-0",
+          "label": "name",
+          "bbox": {
+            "x": 17.583333,
+            "y": 7.125,
+            "width": 15.5,
+            "height": 2.75
+          }
+        },
+        {
+          "id": "chat-clear-1",
+          "label": "email",
+          "bbox": {
+            "x": 17.75,
+            "y": 10.375,
+            "width": 22.083333,
+            "height": 1.75
+          }
+        },
+        {
+          "id": "chat-clear-2",
+          "label": "address",
+          "bbox": {
+            "x": 15.583333,
+            "y": 20.875,
+            "width": 44.333333,
+            "height": 1.9375
+          }
+        },
+        {
+          "id": "chat-clear-4",
+          "label": "phone",
+          "bbox": {
+            "x": 19.166667,
+            "y": 23.75,
+            "width": 27,
+            "height": 2.125
+          }
+        },
+        {
+          "id": "chat-clear-6",
+          "label": "account",
+          "bbox": {
+            "x": 39.333333,
+            "y": 34.125,
+            "width": 27.583333,
+            "height": 2
+          }
+        },
+        {
+          "id": "chat-clear-7",
+          "label": "reference",
+          "bbox": {
+            "x": 31.333333,
+            "y": 36.875,
+            "width": 30,
+            "height": 1.9375
+          }
+        }
+      ],
+      "result": {
+        "truePositives": 6,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "passed": true,
+        "matches": [
+          {
+            "expectedId": "account",
+            "proposedId": "chat-clear-6",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "address",
+            "proposedId": "chat-clear-2",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "email",
+            "proposedId": "chat-clear-1",
+            "iou": 1
+          },
+          {
+            "expectedId": "name",
+            "proposedId": "chat-clear-0",
+            "iou": 0.9999999999999997
+          },
+          {
+            "expectedId": "phone",
+            "proposedId": "chat-clear-4",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "reference",
+            "proposedId": "chat-clear-7",
+            "iou": 0.9999999999999998
+          }
+        ],
+        "thresholds": {
+          "iou": 0.45,
+          "minimumPrecision": 0.7,
+          "minimumRecall": 0.7,
+          "minimumF1": 0.7
+        }
+      },
+      "elapsedMs": 30151
+    },
+    {
+      "caseId": "chat-rotated",
+      "proposals": [
+        {
+          "id": "chat-rotated-0",
+          "label": "name",
+          "bbox": {
+            "x": 90.125,
+            "y": 17.583333,
+            "width": 2.75,
+            "height": 15.5
+          }
+        },
+        {
+          "id": "chat-rotated-1",
+          "label": "email",
+          "bbox": {
+            "x": 87.875,
+            "y": 17.75,
+            "width": 1.75,
+            "height": 22.083333
+          }
+        },
+        {
+          "id": "chat-rotated-2",
+          "label": "address",
+          "bbox": {
+            "x": 77.1875,
+            "y": 15.583333,
+            "width": 1.9375,
+            "height": 44.333333
+          }
+        },
+        {
+          "id": "chat-rotated-4",
+          "label": "phone",
+          "bbox": {
+            "x": 74.125,
+            "y": 19.166667,
+            "width": 2.125,
+            "height": 27
+          }
+        },
+        {
+          "id": "chat-rotated-6",
+          "label": "account",
+          "bbox": {
+            "x": 63.875,
+            "y": 39.333333,
+            "width": 2,
+            "height": 27.583333
+          }
+        },
+        {
+          "id": "chat-rotated-7",
+          "label": "reference",
+          "bbox": {
+            "x": 61.1875,
+            "y": 31.333333,
+            "width": 1.9375,
+            "height": 30
+          }
+        }
+      ],
+      "result": {
+        "truePositives": 6,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "passed": true,
+        "matches": [
+          {
+            "expectedId": "account-rotated",
+            "proposedId": "chat-rotated-6",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "address-rotated",
+            "proposedId": "chat-rotated-2",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "email-rotated",
+            "proposedId": "chat-rotated-1",
+            "iou": 1
+          },
+          {
+            "expectedId": "name-rotated",
+            "proposedId": "chat-rotated-0",
+            "iou": 0.9999999999999997
+          },
+          {
+            "expectedId": "phone-rotated",
+            "proposedId": "chat-rotated-4",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "reference-rotated",
+            "proposedId": "chat-rotated-7",
+            "iou": 0.9999999999999998
+          }
+        ],
+        "thresholds": {
+          "iou": 0.45,
+          "minimumPrecision": 0.7,
+          "minimumRecall": 0.7,
+          "minimumF1": 0.7
+        }
+      },
+      "elapsedMs": 68568
+    },
+    {
+      "caseId": "chat-low-contrast",
+      "proposals": [
+        {
+          "id": "chat-low-contrast-0",
+          "label": "name",
+          "bbox": {
+            "x": 17.583333,
+            "y": 7.0625,
+            "width": 15.583333,
+            "height": 2.875
+          }
+        },
+        {
+          "id": "chat-low-contrast-1",
+          "label": "email",
+          "bbox": {
+            "x": 17.75,
+            "y": 10.3125,
+            "width": 22.083333,
+            "height": 1.8125
+          }
+        },
+        {
+          "id": "chat-low-contrast-2",
+          "label": "address",
+          "bbox": {
+            "x": 15.666667,
+            "y": 20.9375,
+            "width": 44.25,
+            "height": 1.8125
+          }
+        },
+        {
+          "id": "chat-low-contrast-3",
+          "label": "phone",
+          "bbox": {
+            "x": 15.583333,
+            "y": 23.625,
+            "width": 30.5,
+            "height": 2.375
+          }
+        },
+        {
+          "id": "chat-low-contrast-4",
+          "label": "account",
+          "bbox": {
+            "x": 31.5,
+            "y": 34.125,
+            "width": 35.416667,
+            "height": 2
+          }
+        },
+        {
+          "id": "chat-low-contrast-5",
+          "label": "reference",
+          "bbox": {
+            "x": 31.5,
+            "y": 36.9375,
+            "width": 29.75,
+            "height": 1.75
+          }
+        }
+      ],
+      "result": {
+        "truePositives": 6,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "passed": true,
+        "matches": [
+          {
+            "expectedId": "account-low-contrast",
+            "proposedId": "chat-low-contrast-4",
+            "iou": 0.7788235126698965
+          },
+          {
+            "expectedId": "address-low-contrast",
+            "proposedId": "chat-low-contrast-2",
+            "iou": 0.9337254088555369
+          },
+          {
+            "expectedId": "email-low-contrast",
+            "proposedId": "chat-low-contrast-1",
+            "iou": 0.9655172413793103
+          },
+          {
+            "expectedId": "name-low-contrast",
+            "proposedId": "chat-low-contrast-0",
+            "iou": 0.9514066699673128
+          },
+          {
+            "expectedId": "phone-low-contrast",
+            "proposedId": "chat-low-contrast-3",
+            "iou": 0.7876918314264683
+          },
+          {
+            "expectedId": "reference-low-contrast",
+            "proposedId": "chat-low-contrast-5",
+            "iou": 0.8956989247311828
+          }
+        ],
+        "thresholds": {
+          "iou": 0.45,
+          "minimumPrecision": 0.7,
+          "minimumRecall": 0.7,
+          "minimumF1": 0.7
+        }
+      },
+      "elapsedMs": 31299
+    },
+    {
+      "caseId": "chat-partially-obscured",
+      "proposals": [
+        {
+          "id": "chat-partially-obscured-0",
+          "label": "name",
+          "bbox": {
+            "x": 17.583333,
+            "y": 7.125,
+            "width": 15.5,
+            "height": 2.75
+          }
+        },
+        {
+          "id": "chat-partially-obscured-1",
+          "label": "email",
+          "bbox": {
+            "x": 17.75,
+            "y": 10.375,
+            "width": 22.083333,
+            "height": 1.75
+          }
+        },
+        {
+          "id": "chat-partially-obscured-4",
+          "label": "phone",
+          "bbox": {
+            "x": 19.166667,
+            "y": 23.75,
+            "width": 27,
+            "height": 2.125
+          }
+        },
+        {
+          "id": "chat-partially-obscured-6",
+          "label": "account",
+          "bbox": {
+            "x": 39.333333,
+            "y": 34.125,
+            "width": 27.583333,
+            "height": 2
+          }
+        },
+        {
+          "id": "chat-partially-obscured-7",
+          "label": "reference",
+          "bbox": {
+            "x": 31.333333,
+            "y": 36.875,
+            "width": 30,
+            "height": 1.9375
+          }
+        }
+      ],
+      "result": {
+        "truePositives": 5,
+        "falsePositives": 0,
+        "falseNegatives": 1,
+        "precision": 1,
+        "recall": 0.8333333333333334,
+        "f1": 0.9090909090909091,
+        "passed": true,
+        "matches": [
+          {
+            "expectedId": "account-partially-obscured",
+            "proposedId": "chat-partially-obscured-6",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "email-partially-obscured",
+            "proposedId": "chat-partially-obscured-1",
+            "iou": 1
+          },
+          {
+            "expectedId": "name-partially-obscured",
+            "proposedId": "chat-partially-obscured-0",
+            "iou": 0.9999999999999997
+          },
+          {
+            "expectedId": "phone-partially-obscured",
+            "proposedId": "chat-partially-obscured-4",
+            "iou": 1.0000000000000002
+          },
+          {
+            "expectedId": "reference-partially-obscured",
+            "proposedId": "chat-partially-obscured-7",
+            "iou": 0.9999999999999998
+          }
+        ],
+        "thresholds": {
+          "iou": 0.45,
+          "minimumPrecision": 0.7,
+          "minimumRecall": 0.7,
+          "minimumF1": 0.7
+        }
+      },
+      "elapsedMs": 30281
+    }
+  ]
+}
