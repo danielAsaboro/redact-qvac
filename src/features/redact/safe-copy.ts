@@ -82,12 +82,14 @@ export async function generateSafeCopy(input: {
   for (let index = 0; index < flattenedPages.length; index += 1) {
     const sourcePage = input.pages[index];
     const embedded = await document.embedPng(flattenedPages[index]);
-    const outputPage = document.addPage([sourcePage.width, sourcePage.height]);
+    const width = sourcePage.pdfWidth ?? sourcePage.width;
+    const height = sourcePage.pdfHeight ?? sourcePage.height;
+    const outputPage = document.addPage([width, height]);
     outputPage.drawImage(embedded, {
       x: 0,
       y: 0,
-      width: sourcePage.width,
-      height: sourcePage.height,
+      width,
+      height,
     });
   }
   const pdfBytes = await document.save();

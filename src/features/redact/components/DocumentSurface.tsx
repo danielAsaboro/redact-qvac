@@ -1,4 +1,5 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { markToPixelRect } from "../safe-copy";
 import type { OCRBlock, RasterPage, RedactionCandidate, RedactionMark } from "../workflow-domain";
 
 export type RedactionGeometry = Pick<
@@ -147,7 +148,7 @@ export function DocumentSurface({
           }}
           onPointerDown={(event) => beginMove(event, mark)}
           role={mode === "original" ? "button" : undefined}
-          style={{ left: `${mark.x}%`, top: `${mark.y}%`, width: `${mark.width}%`, height: `${mark.height}%` }}
+          style={mode === "safe" ? rasterMaskStyle(mark, page) : { left: `${mark.x}%`, top: `${mark.y}%`, width: `${mark.width}%`, height: `${mark.height}%` }}
           tabIndex={mode === "original" ? 0 : undefined}
         >
           <span>{mode === "original" ? mark.label : ""}</span>
@@ -195,4 +196,9 @@ function clamp(value: number, minimum: number, maximum: number) {
 
 function round(value: number) {
   return Math.round(value * 10_000) / 10_000;
+}
+
+function rasterMaskStyle(mark: RedactionMark, page: RasterPage) {
+  const rect = markToPixelRect(mark, page);
+  return { left: `${rect.x / page.width * 100}%`, top: `${rect.y / page.height * 100}%`, width: `${rect.width / page.width * 100}%`, height: `${rect.height / page.height * 100}%` };
 }

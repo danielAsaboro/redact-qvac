@@ -30,7 +30,7 @@ export type QvacOcrRuntime = {
   }): Promise<string>;
   ocr(options: {
     modelId: string;
-    image: Buffer;
+    image: Parameters<typeof import("@qvac/sdk").ocr>[0]["image"];
     options: { paragraph: boolean };
   }): { blocks: Promise<unknown[]>; stats: Promise<unknown> };
   unloadModel(options: { modelId: string; clearStorage: boolean }): Promise<unknown>;
@@ -71,7 +71,9 @@ export function createQvacOcrAnalyzer(options: Options): DocumentAnalyzer {
   async function runOcr(loadedModelId: string, image: Buffer) {
     const operation = options.runtime.ocr({
       modelId: loadedModelId,
-      image,
+      // SDK 0.20 types use Bare's Buffer. Its Node client only calls
+      // toString("base64"), which Node Buffer implements identically.
+      image: image as unknown as Parameters<typeof import("@qvac/sdk").ocr>[0]["image"],
       options: { paragraph: false },
     });
     const [unknownBlocks] = await Promise.all([operation.blocks, operation.stats]);

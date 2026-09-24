@@ -12,6 +12,7 @@ const sourceName = path.basename(sourcePath);
 const qvacDirectory = path.join(appDirectory, ".qvac");
 const cacheDirectory = path.join(qvacDirectory, "models");
 const configPath = path.join(qvacDirectory, "config.json");
+const runtimeHome = path.join(qvacDirectory, "runtime-home");
 
 let modelId;
 let sdk;
@@ -20,6 +21,8 @@ try {
   const sourceBytes = await readFile(sourcePath);
   const sourceDigest = createHash("sha256").update(sourceBytes).digest("hex");
   await mkdir(cacheDirectory, { recursive: true });
+  await mkdir(path.join(runtimeHome, ".qvac", "tmp"), { recursive: true });
+  process.env.SNAP_USER_COMMON = runtimeHome;
   await writeFile(
     configPath,
     `${JSON.stringify({ cacheDirectory }, null, 2)}\n`,

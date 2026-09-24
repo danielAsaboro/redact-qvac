@@ -1,3 +1,4 @@
+import packageManifest from "../package.json";
 import type { BoundingBox, RedactionLabel } from "../src/features/redact/workflow-domain";
 
 export type LabelledRegion = {
@@ -21,10 +22,10 @@ export const EVALUATION_THRESHOLDS = {
 } as const;
 
 export const EVALUATION_IDENTIFIERS = {
-  sdk: "@qvac/sdk@0.17.1",
+  sdk: `@qvac/sdk@${packageManifest.dependencies["@qvac/sdk"]}`,
   ocr: "OCR_LATIN/qvac-ocr-latin",
   reasoning: "QWEN3_600M_INST_Q4/qwen3-600m-instruct-q4",
-  policy: "redact-sensitive-fields-v2",
+  policy: "redact-sensitive-fields-v3",
 } as const;
 
 const clearRegions: LabelledRegion[] = [

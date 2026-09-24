@@ -18,13 +18,14 @@ function groundedLabel(text: string, proposed: CandidateSuggestion["label"]): Ca
   const value = text.trim();
   const lower = value.toLowerCase();
   if (/controlled test document|no real personal information/.test(lower)) return null;
+  if (/^(?:account holder|full name|customer name|patient name)\s*:\s*\S.+/i.test(value)) return "name";
   if (value.includes("@")) return "email";
-  if (/\b(reference|ref(?:erence)?[.:#])\b/i.test(value)) return "reference";
+  if (/\b(?:reference|ref)\s*[:.#]?\s+[A-Z0-9-]*\d[A-Z0-9-]*/i.test(value) || /^[A-Z]{2,}(?:[- ]\d{2,})+$/.test(value)) return "reference";
   if (/\b(account|acct|card)\b/i.test(value) && /\d/.test(value)) return "account";
   if (/\b(phone|telephone|mobile|tel[.:])\b/i.test(value) && (value.match(/\d/g)?.length ?? 0) >= 7) return "phone";
   if (/\b\d{1,5}\s+.+\b(road|rd|street|st|close|avenue|ave|lane|ln|drive|dr|boulevard|blvd|way)\b/i.test(value)) return "address";
   if (/\b(passport|social security|ssn|national id|employee id|driver'?s licen[cs]e)\b/i.test(value)) return "identity";
-  if (/[₦$£€¥]\s*\d|\bamount\b[^\d]{0,8}\d/i.test(value)) return "amount";
+  if (/[₦$£€¥]\s*\d|\bamount\b[^\d]{0,8}\d/i.test(value) || /^\d{1,3}(?:,\d{3})+\.\d{2}$/.test(value)) return "amount";
   if (/\b(?:19|20)\d{2}[-/]\d{1,2}[-/]\d{1,2}\b|\b\d{1,2}[-/]\d{1,2}[-/](?:\d{2}|\d{4})\b/.test(value)) return "date";
   if (/\b(?:ltd|limited|llc|inc|company|corporation|corp)\b/i.test(value)) return "business";
   if (
@@ -42,4 +43,22 @@ export function validateCandidateForEvidence(
   return label
     ? { ...candidate, label, explanation: explanations[label] }
     : null;
+}
+
+/** Conservative supplements use only explicit OCR patterns, never invented text. */
+export function explicitOcrCandidates(
+  blocks: Array<{ text: string; confidence: number | null }>,
+  level: "private" | "confidential",
+): CandidateSuggestion[] {
+  const direct = new Set(["name", "email", "phone", "address", "account", "identity"]);
+  return blocks.flatMap((block, blockIndex) => {
+    // A non-name proposal prevents guessing names from arbitrary capitalized text.
+    const label = groundedLabel(block.text, "email");
+    if (!label || (level === "private" && !direct.has(label))) return [];
+    return [{
+      blockIndex, label,
+      explanation: `${explanations[label]} Explicit OCR pattern; score reflects text recognition. Review required.`,
+      confidence: block.confidence ?? 0,
+    }];
+  });
 }

@@ -29,6 +29,8 @@ export type RasterPage = {
   width: number;
   height: number;
   pngBytes: ArrayBuffer;
+  pdfWidth?: number;
+  pdfHeight?: number;
 };
 
 export type RedactionLabel =
@@ -254,6 +256,27 @@ export function moveMark(
           }
         : mark,
     ),
+  };
+}
+
+export function setMarkGeometry(
+  session: RedactSession,
+  markId: string,
+  geometry: Pick<RedactionMark, "x" | "y" | "width" | "height">,
+): RedactSession {
+  if (!Object.values(geometry).every(Number.isFinite) || geometry.width <= 0 || geometry.height <= 0) return session;
+  const width = Math.min(100, geometry.width);
+  const height = Math.min(100, geometry.height);
+  return {
+    ...session,
+    generatedCopy: null,
+    marks: session.marks.map(mark => mark.id === markId ? {
+      ...mark,
+      x: Math.max(0, Math.min(100 - width, geometry.x)),
+      y: Math.max(0, Math.min(100 - height, geometry.y)),
+      width,
+      height,
+    } : mark),
   };
 }
 

@@ -6,7 +6,7 @@ import sharp from "sharp";
 
 import { createQvacOcrAnalyzer } from "./qvac-analyzer";
 import { resolveLocalQvacPaths } from "./local-config";
-import { assertWarmedCache, withRemoteFetchBlocked } from "./offline-proof";
+import { assertWarmedCache, assertRemoteNetworkingDenied, withRemoteFetchBlocked } from "./offline-proof";
 import { createStructuredReasoner } from "./reasoning";
 
 async function main() {
@@ -21,13 +21,8 @@ async function main() {
   process.env.QVAC_CONFIG_PATH = paths.configPath;
   process.env.SNAP_USER_COMMON = paths.runtimeHome;
 
-  let osNetworkDenied = false;
-  try {
-    await fetch("https://example.invalid/redact-offline-proof");
-  } catch {
-    osNetworkDenied = true;
-  }
-  if (!osNetworkDenied) throw new Error("Process sandbox did not block remote networking");
+  await assertRemoteNetworkingDenied();
+  const osNetworkDenied = true;
 
   const qvac = await import("@qvac/sdk");
   const analyzer = createQvacOcrAnalyzer({

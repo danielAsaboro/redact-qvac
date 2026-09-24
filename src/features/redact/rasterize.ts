@@ -46,14 +46,16 @@ export function scaleWithinLongEdge(
     throw new Error("Page dimensions must be positive");
   }
   const longEdge = Math.max(dimensions.width, dimensions.height);
-  if (longEdge <= maxLongEdge) {
-    return { width: dimensions.width, height: dimensions.height };
-  }
-  const scale = maxLongEdge / longEdge;
+  const scale = Math.min(1, maxLongEdge / longEdge);
   return {
     width: Math.max(1, Math.round(dimensions.width * scale)),
     height: Math.max(1, Math.round(dimensions.height * scale)),
   };
+}
+
+// PDF units are 1/72 inch; 2x preserves small text for local OCR.
+export function pdfRasterDimensions(dimensions: Dimensions, maxLongEdge: number): Dimensions {
+  return scaleWithinLongEdge({ width: dimensions.width * 2, height: dimensions.height * 2 }, maxLongEdge);
 }
 
 export function validatePdfInspection(input: {
@@ -193,7 +195,7 @@ const defaultAdapters: RasterizeAdapters = {
       for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
         const page = await document.getPage(pageNumber);
         const original = page.getViewport({ scale: 1 });
-        const dimensions = scaleWithinLongEdge(original, maxLongEdge);
+        const dimensions = pdfRasterDimensions(original, maxLongEdge);
         const scale = dimensions.width / original.width;
         const viewport = page.getViewport({ scale });
         const canvas = createCanvas(dimensions.width, dimensions.height);
@@ -205,6 +207,8 @@ const defaultAdapters: RasterizeAdapters = {
           documentId: "pending",
           pageNumber,
           ...dimensions,
+          pdfWidth: original.width,
+          pdfHeight: original.height,
           pngBytes: await canvasPngBytes(canvas),
         };
         page.cleanup();

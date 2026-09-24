@@ -37,6 +37,7 @@ import {
   rejectCandidate,
   removeMark,
   resizeMark,
+  setMarkGeometry,
   type RedactSession,
   type OCRBlock,
   type AnalysisRun,
@@ -73,8 +74,13 @@ const browserAdapters: RedactAppAdapters = {
       const link = document.createElement("a");
       link.href = href;
       link.download = filename;
+      link.hidden = true;
+      document.body.appendChild(link);
       link.click();
-      window.setTimeout(() => URL.revokeObjectURL(href), 0);
+      link.remove();
+      // Embedded browsers may hand PDFs to their download handler asynchronously.
+      // Keep the object URL alive until that handler has consumed the blob.
+      window.setTimeout(() => URL.revokeObjectURL(href), 60_000);
     },
   },
   async digest(bytes) {
@@ -409,7 +415,7 @@ export function RedactApp({
               const index = session.marks.length + 1;
               setSession(
                 addManualMark(session, {
-                  id: `manual-${index}`,
+                  id: `manual-${crypto.randomUUID()}`,
                   documentId: session.source.id,
                   pageId: page.id,
                   pageNumber: page.pageNumber,
@@ -429,11 +435,7 @@ export function RedactApp({
             }
             onGeometry={(id, geometry) =>
               setSession(
-                resizeMark(
-                  moveMark(session, id, { x: geometry.x, y: geometry.y }),
-                  id,
-                  { width: geometry.width, height: geometry.height },
-                ),
+                setMarkGeometry(session, id, geometry),
               )
             }
             onRemove={(id) => setSession(removeMark(session, id, adapters.now()))}
@@ -442,6 +444,13 @@ export function RedactApp({
             onRetry={prepare}
             onDone={createCopy}
           />
+        )}
+        {session?.stage === "exporting" && (
+          <section className="analyze-stage narrow-stage" role="status" aria-live="polite">
+            <div className="analysis-orbit"><span>◌</span></div>
+            <h1>Creating your safe copy</h1>
+            <p>Flattening {session.pages.length} {session.pages.length === 1 ? "page" : "pages"} with your approved redactions. Your original stays unchanged.</p>
+          </section>
         )}
         {session?.stage === "complete" && generatedCopy && (
           <CompleteStage
