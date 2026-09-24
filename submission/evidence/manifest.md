@@ -15,9 +15,9 @@
 | Production dependency audit | verified | `2026-09-24-run.md`: `npm audit --audit-level=high --omit=dev` found zero vulnerabilities |
 | Source fixture unchanged | verified | `2026-09-24-run.md`: live browser receipt compared SHA-256 and exact source bytes before and after export |
 | Open bounty and Nigeria eligibility | verified | [Live Whop bounty page](https://whop.com/qvac/exp_wznos5cmQd7SQY/app/app/posts/post_1Cf6BActRMK2RVY3m4Lqcd/?a=qvacai) showed Open and listed Nigeria on 24 September 2026 |
-| Standalone authored history | verified | The Redact-only release branch preserves 18 earlier subtree commits and adds three substantive commits authored as `danielAsaboro` with the configured GitHub no-reply address; public-repo visibility remains unverified |
-| Public licensed GitHub release | incomplete | MIT `LICENSE` and README exist locally, but there is no Git remote or public repository URL yet |
-| X post linking repo and tagging @qvac | incomplete | Local draft in `submission/submission-copy.md`; no published X URL |
-| Final Whop entry | incomplete | The page requires public GitHub and X URLs plus visual proof; no entry has been submitted |
+| Standalone authored history | verified | The [public Redact-only release](https://github.com/danielAsaboro/redact-qvac) preserves 18 earlier subtree commits and three substantive release commits authored as `danielAsaboro` with the configured GitHub no-reply address |
+| Public licensed GitHub release | verified | [Public repository](https://github.com/danielAsaboro/redact-qvac) showed its README, MIT license, screenshot, source, and 21 commits in Daniel Chrome on 24 September 2026 |
+| X post linking repo and tagging @qvac | incomplete | Draft saved under `@useLeash` with the public repo URL, `@qvac` tag, AI-output image, and alt text; no published X URL |
+| Final Whop entry | incomplete | The page requires the public GitHub and X URLs plus visual proof; Daniel Chrome is signed out of Whop and no entry has been submitted |
 
 The screenshot uses a controlled fictional file. Evaluation recall and a successful export do not guarantee that every sensitive field in an arbitrary document was found or covered; the user must inspect each page.

@@ -10,18 +10,20 @@ I wanted a practical way to check private details before sharing a document whil
 
 ## X post draft
 
-> Built Redact with @qvac: local OCR + reasoning suggest private details in images and PDFs. Review each mark, fix misses, export a separate flattened copy. @qvac/sdk 0.20.0: loadModel, ocr, completion.
+> Your document may expose more than you meant.
 >
-> Repo: [PUBLIC_GITHUB_REPO_URL]
+> I built Redact with @qvac SDK 0.20.0: OCR + reasoning run locally and suggest private details. Review every mask, then export a flattened copy; the original stays untouched.
+>
+> Code: https://github.com/danielAsaboro/redact-qvac
 
-Attach [ai-output.png](evidence/ai-output.png) to the X post. The image shows real local model output on a fictional fixture. Replace the repository placeholder with the verified public URL before posting; do not publish this draft with a placeholder. The draft is 252 characters with the planned `https://github.com/danielAsaboro/redact-qvac` URL.
+This draft is saved in Daniel Chrome under `@useLeash` with [ai-output.png](evidence/ai-output.png) attached and descriptive alt text. The image shows real local model output on a fictional fixture. Review the account and copy before posting.
 
 ## Exact Whop entry values to stage after publication
 
-- **Public GitHub repository URL:** `[PUBLIC_GITHUB_REPO_URL]`
+- **Public GitHub repository URL:** `https://github.com/danielAsaboro/redact-qvac`
 - **X post URL:** `[PUBLISHED_X_POST_URL]`
 - **Description:** Use the two-line copy above.
 - **Visual proof:** Upload [ai-output.png](evidence/ai-output.png). It shows 12 locally found text regions and six suggestions.
 - **Optional reason:** Use the line above only if the form offers the field.
 
-The [evidence manifest](evidence/manifest.md) supports the local-product claims. This draft does not claim guaranteed detection or a publicly available release yet.
+The [evidence manifest](evidence/manifest.md) supports the local-product claims. This draft does not claim guaranteed detection or a published X post.

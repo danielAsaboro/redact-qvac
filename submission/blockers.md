@@ -2,9 +2,8 @@
 
 ## Required external gates
 
-1. **Public GitHub URL:** Redact currently has no public standalone repository. The private parent repository must not be used as the bounty link. The local standalone candidate preserves Redact's authored history, license, source, README, and evidence; publish it only after review.
-2. **X post URL:** The [draft](submission-copy.md) needs the actual public repository link, `@qvac` tag, and [AI-output screenshot](evidence/ai-output.png). It has not been posted.
-3. **Whop entry:** The inspected page displayed “Sign in to attempt this bounty.” Once signed in, the public GitHub URL, X URL, description, and screenshot must be staged and reviewed. The final submission is reserved for the user.
+1. **X post URL:** A [draft](submission-copy.md) with the [public repository](https://github.com/danielAsaboro/redact-qvac), `@qvac` tag, and [AI-output screenshot](evidence/ai-output.png) is saved under `@useLeash`. It has not been posted, so there is no X URL yet.
+2. **Whop entry:** The inspected page displayed “Sign in to attempt this bounty.” Once signed in, the public GitHub URL, X URL, description, and screenshot must be staged and reviewed. The final submission is reserved for the user.
 
 ## Product limits to keep visible
 

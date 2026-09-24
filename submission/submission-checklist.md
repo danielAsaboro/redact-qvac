@@ -14,10 +14,10 @@ Official source: [QVAC SDK bounty on Whop](https://whop.com/qvac/exp_wznos5cmQd7
 
 ## Publication and final entry
 
-- [ ] Review the [release handoff](release-handoff.md) and standalone candidate; confirm the planned public repository name/account. Keep the private `bring-ai-home` monorepo private.
-- [ ] Publish only the standalone Redact candidate as a public GitHub repository; verify the URL, MIT license, README, source history, and screenshot are visible without login.
-- [ ] Publish the [X draft](submission-copy.md) with the verified public repository URL, tag `@qvac`, and attach the AI-output screenshot. Verify the public X URL.
+- [x] Publish only the standalone Redact candidate as a [public GitHub repository](https://github.com/danielAsaboro/redact-qvac); the README, MIT license, source history, and screenshot were visible in Chrome.
+- [x] Save an [X draft](submission-copy.md) under `@useLeash` with the public repository URL, `@qvac` tag, AI-output screenshot, and alt text.
+- [ ] Review that X account and draft, publish the post, then verify its public X URL.
 - [ ] Sign in to Whop, stage the public GitHub URL, X URL, one or two-line description, and screenshot from [submission-copy.md](submission-copy.md).
 - [ ] Review the filled entry and perform the final Whop submission yourself.
 
-No public repository, X post, or Whop entry has been created by this packet.
+The public GitHub repository exists. The X draft has not been posted, and no Whop entry has been submitted.
